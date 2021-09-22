@@ -11,7 +11,7 @@ const firebaseConfig = {
     measurementId: measurementId,
 }
 
-const app = firebase.initializeApp(firebaseConfig)
+if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig)
+else firebase.app()
 
-export default app
 export const auth = firebase.auth()
