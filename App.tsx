@@ -3,31 +3,27 @@ import React, { useEffect, useState } from 'react';
 import { Button, StyleSheet, Text, View } from 'react-native';
 import { AuthProvider } from './hook/AuthContext';
 import { useAuth } from './hook/AuthContext'
+import { NavigationContainer } from '@react-navigation/native'
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import HomePage from './src/screens/HomePage';
+import LogInPage from './src/screens/LogInPage';
+import { RootStackParamList } from './types/types';
 
-function App() {
-  const { login, logout, currentUser, username } = useAuth()
+
+const Stack = createNativeStackNavigator()
+
+const AppNavigation: React.FC = () => {
+  const { currentUser } = useAuth()
 
 
-  const onLogin = async () => {
-    let email = 'roto93@yahoo.com.tw'
-    let pwd = '123456'
-    const res = await login(email, pwd)
-    console.log(res.user?.email)
-  }
-
-  const onLogout = async () => {
-    await logout()
-    console.log('logged out')
-  }
-
+  if (!currentUser) return <LogInPage />
 
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <Button title={"login"} onPress={onLogin} />
-      <Button title={"logout"} onPress={onLogout} />
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer >
+      <Stack.Navigator>
+        <Stack.Screen name={"Home"} component={HomePage} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
 }
 
@@ -44,7 +40,7 @@ export default function APP() {
 
   return (
     <AuthProvider>
-      <App />
+      <AppNavigation />
     </AuthProvider>
   )
 }
