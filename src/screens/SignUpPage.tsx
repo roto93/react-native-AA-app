@@ -1,40 +1,40 @@
 import { useNavigation } from '@react-navigation/core'
-import React, { useState } from 'react'
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View, Dimensions } from 'react-native'
+import React, { useState, useEffect } from 'react'
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native'
 import { useAuth } from '../../hook/AuthContext'
-import { LogInPageProp } from '../../types/types'
-import { RowView } from '../components/RowView'
+import { SignUpPageProp } from '../../types/types'
 
 const winY: number = Dimensions.get('window').height
 
-const LogInPage = () => {
-    const { login } = useAuth()
+
+
+const SignUpPage = () => {
+    const { signup } = useAuth()
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
+    const [password2, setPassword2] = useState('');
     const [error, setError] = useState('');
-    const navigation = useNavigation<LogInPageProp>()
+    const navigation = useNavigation<SignUpPageProp>()
 
-    const onLogin = async () => {
+    const onSignUp = async () => {
+        if (password !== password2) {
+            setError('Password confirmation failed')
+            setPassword('')
+            setPassword2('')
+            return
+        }
         try {
-            const res = await login(email, password)
-            console.log(res.user)
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }],
-            })
+            const res = await signup(email, password)
+            console.log(res.user.providerData[0].providerId)
+            navigation.navigate('LogIn')
         } catch (e) {
             console.log(e.message)
-            setError(e.message)
         }
     }
 
-
-
-
-
     return (
-        <View style={styles.container} >
-            <Text style={styles.title}>Welcome!</Text>
+        <ScrollView style={styles.container} contentContainerStyle={{ justifyContent: 'flex-start', alignItems: 'center' }}>
+            <Text style={styles.title}>註冊新帳號</Text>
             {error !== "" && <Text style={styles.error}>{error}</Text>}
             <View style={styles.inputBox}>
                 <Text style={styles.label}>Email</Text>
@@ -54,29 +54,26 @@ const LogInPage = () => {
                 />
             </View>
 
-            <RowView style={{ width: 140, justifyContent: 'space-between' }}>
-                <TouchableOpacity style={styles.forgetPwdButton} onPress={() => { }} >
-                    <Text>忘記密碼?</Text>
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.forgetPwdButton} onPress={() => { navigation.navigate("SignUp") }} >
-                    <Text>註冊帳號</Text>
-                </TouchableOpacity>
-            </RowView>
+            <View style={[styles.inputBox, { marginTop: 8 }]}>
+                <Text style={styles.label}>Confirm Password</Text>
+                <TextInput
+                    style={styles.input}
+                    value={password2}
+                    onChangeText={(text) => { setPassword2(text) }}
+                />
+            </View>
 
-            <TouchableOpacity style={styles.loginButton} onPress={onLogin} >
-                <Text>登入</Text>
+
+
+            <TouchableOpacity style={styles.loginButton} onPress={onSignUp} >
+                <Text>註冊</Text>
             </TouchableOpacity>
 
-            <View style={{ borderTopWidth: 1, height: 1, width: 320, marginTop: 100, borderColor: '#888' }} />
-
-            <TouchableOpacity style={[styles.loginButton, styles.GoogleLoginButton]} onPress={() => { }} >
-                <Text>Google 登入</Text>
-            </TouchableOpacity>
-        </View>
+        </ScrollView>
     )
 }
 
-export default LogInPage
+export default SignUpPage
 
 const styles = StyleSheet.create({
     container: {
@@ -84,8 +81,6 @@ const styles = StyleSheet.create({
         height: winY,
         backgroundColor: '#fff',
         width: '100%',
-        justifyContent: 'flex-start',
-        alignItems: 'center'
     },
     title: {
         fontSize: 36,
@@ -124,6 +119,7 @@ const styles = StyleSheet.create({
         borderRadius: 4,
         justifyContent: 'center',
         alignItems: 'center',
+        marginTop: 32
     },
     GoogleLoginButton: {
         marginTop: 20

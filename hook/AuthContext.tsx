@@ -4,16 +4,18 @@ import { auth } from '../firebase'
 
 interface AuthContextType {
     currentUser: firebase.User | null,
-    username: firebase.UserInfo | string | null,
-    login: (email: string, password: string) => any
+    userEmail: firebase.UserInfo | string | null,
+    login: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
+    signup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
 }
 
 const defaultValue: AuthContextType = {
-    currentUser: {} as firebase.User,
-    username: '' as unknown as firebase.UserInfo,
-    login: () => { },
-    logout: () => { }
+    currentUser: null as firebase.User,
+    userEmail: '' as unknown as firebase.UserInfo,
+    login: undefined,
+    logout: undefined,
+    signup: undefined,
 }
 
 const AuthContext = createContext<AuthContextType>(defaultValue)
@@ -21,30 +23,32 @@ const AuthContext = createContext<AuthContextType>(defaultValue)
 export const useAuth = () => useContext(AuthContext)
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-    const [currentUser, setCurrentUser] = useState<firebase.User | null>({} as firebase.User);
-    const [username, setUsername] = useState<firebase.UserInfo | string | null>('' as unknown as firebase.UserInfo);
+    const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
+    const [userEmail, setUserEmail] = useState<firebase.UserInfo | string | null>('' as unknown as firebase.UserInfo);
 
     // TODO: 應該output function 就好
-    const login = async (email: string, pwd: string) => auth.signInWithEmailAndPassword(email, pwd)
-
+    const login = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
+        auth.signInWithEmailAndPassword(email, pwd)
+    )
 
     const logout = () => auth.signOut()
 
+    const signup = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => auth.createUserWithEmailAndPassword(email, pwd)
 
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
             if (user) {
-                user.displayName ? setUsername(user.displayName)
-                    : setUsername(user.email)
+                user.displayName ? setUserEmail(user.displayName)
+                    : setUserEmail(user.email)
             } else {
-                setUsername('')
+                setUserEmail('')
             }
         })
         return unsubscribe
     }, [])
 
-    const value: AuthContextType = { login, logout, currentUser, username }
+    const value: AuthContextType = { login, logout, signup, currentUser, userEmail }
 
     return (
         <AuthContext.Provider value={value}>
