@@ -12,7 +12,7 @@ import { RootStackParamList } from './types/types'
 
 LogBox.ignoreLogs(['Setting a timer for a long'])
 
-const Stack = createNativeStackNavigator()
+const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const AppNavigation: React.FC = () => {
   const { currentUser } = useAuth()
