@@ -23,7 +23,7 @@ export const useAuth = () => useContext(AuthContext)
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
-    const userRef = db.ref(`/users/${currentUser.uid}`)
+
 
     const login = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
         auth.signInWithEmailAndPassword(email, pwd)
@@ -107,10 +107,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
     const deleteUser = async () => {
-        const credential = await getUserCredential()
-        await currentUser.reauthenticateWithCredential(credential)
-        await currentUser.delete()
-        const res = await userRef.remove()
+        try {
+            const credential = await getUserCredential()
+            await currentUser.reauthenticateWithCredential(credential)
+            await currentUser.delete()
+            const userRef = db.ref(`/users/${currentUser.uid}`)
+            const res = await userRef.remove()
+        } catch (e) {
+            console.log(e.message)
+        }
     }
 
 

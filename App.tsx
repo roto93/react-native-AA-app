@@ -9,15 +9,21 @@ import HomePage from './src/screens/HomePage';
 import LogInPage from './src/screens/LogInPage';
 import SignUpPage from './src/screens/SignUpPage';
 import { RootStackParamList } from './types/types'
+import Toast from './src/components/Toast';
+import { StoreContext, useMappedState, useDispatch } from 'redux-react-hook'
+import * as Action from './src/redux/action'
+import store from './src/redux/store'
 
 LogBox.ignoreLogs(['Setting a timer for a long'])
 
 const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const AppNavigation: React.FC = () => {
-  const { currentUser } = useAuth()
-
-
+  const showToast = useMappedState(state => state.showToastReducer.showToast)
+  const showToastOptions = useMappedState(state => state.showToastReducer.options)
+  const setShowToast = (bool: boolean) => dispatch(Action.setShowToast(bool))
+  const dispatch = useDispatch()
+  console.log(JSON.stringify(showToastOptions))
 
   return (
     <NavigationContainer >
@@ -27,6 +33,7 @@ const AppNavigation: React.FC = () => {
         <Stack.Screen name={"SignUp"} component={SignUpPage} />
 
       </Stack.Navigator>
+      <Toast isVisible={showToast} setIsVisible={setShowToast} options={showToastOptions} />
     </NavigationContainer>
   );
 }
@@ -42,9 +49,12 @@ const styles = StyleSheet.create({
 
 export default function APP() {
 
+
   return (
-    <AuthProvider>
-      <AppNavigation />
-    </AuthProvider>
+    <StoreContext.Provider value={store()}>
+      <AuthProvider>
+        <AppNavigation />
+      </AuthProvider>
+    </StoreContext.Provider>
   )
 }

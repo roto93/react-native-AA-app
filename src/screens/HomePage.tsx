@@ -4,6 +4,7 @@ import { StyleSheet, Text, View, Button } from 'react-native'
 import { useAuth } from '../hook/AuthContext'
 import { db } from '../../firebase'
 import { DataSnapShot, HomePageProp } from '../../types/types'
+import useNavigate from '../hook/useNavigate'
 
 
 
@@ -15,30 +16,28 @@ const HomePage = () => {
     const [email, setEmail] = useState('');
     const [logInBy, setLogInBy] = useState('');
     const [username, setUsername] = useState('');
-    const navigation = useNavigation<HomePageProp>()
+    const { oneWayNavigate } = useNavigate()
 
     const write = () => {
         userRef.set({
             profile_picture: currentUser?.photoURL,
-            logInBy: currentUser?.providerData[0]?.providerId
+            logInBy: currentUser?.providerData[0]?.providerId,
+            email: currentUser.email
         })
     }
 
     const onDeleteUser = async () => {
         try {
             await deleteUser()
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'LogIn' }]
-            })
+            oneWayNavigate('LogIn')
         } catch (e) {
             console.log(e.message)
+            console.log(e.code)
         }
     }
 
     const checkUserName = (username: string) => {
         if (username) return setUsername(username)
-
     }
 
     useEffect(() => {
@@ -50,14 +49,11 @@ const HomePage = () => {
         })
 
         return () => { userRef.off() }
-    }, [])
+    }, [currentUser])
 
-    const onLogout = async () => {
+    const onLogout = async (): Promise<void> => {
         await logout()
-        navigation.reset({
-            index: 0,
-            routes: [{ name: 'LogIn' }]
-        })
+        oneWayNavigate('LogIn')
     }
     return (
         <View style={styles.container}>

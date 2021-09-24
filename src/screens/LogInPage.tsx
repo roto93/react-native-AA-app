@@ -5,16 +5,16 @@ import { useAuth } from '../hook/AuthContext'
 import { LogInPageProp } from '../../types/types'
 import { RowView } from '../components/RowView'
 import * as Linking from 'expo-linking'
+import { useDispatch } from 'redux-react-hook'
+import * as Action from '../redux/action'
 
 const winY: number = Dimensions.get('window').height
 
 const LogInPage = () => {
     const { signInWithGoogleAsync, currentUser } = useAuth()
-    const [email, setEmail] = useState('');
     const navigation = useNavigation<LogInPageProp>()
-    const [data, setData] = useState<object>(null);
-
-    console.log(currentUser?.email)
+    const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
+    const dispatch = useDispatch()
 
     const onGoogleSignIn = async () => {
         if (!currentUser) {
@@ -42,15 +42,13 @@ const LogInPage = () => {
     return (
         <View style={styles.container} >
             <Text style={styles.title}>Welcome!</Text>
-            <Text>data:{data ? JSON.stringify(data) : 'no link'}</Text>
-            <TextInput style={{ backgroundColor: '#888', width: 200, height: 40, }} value={email} onChangeText={t => setEmail(t)} />
             <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
                 <Text>Email 登入</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.loginButton} onPress={onGoogleSignIn} >
                 <Text>Google 登入</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
+            <TouchableOpacity style={styles.loginButton} onPress={() => { setShowToast(true, { text: 'Hi', coverScreen: true }) }} >
                 <Text>Facebook 登入</Text>
             </TouchableOpacity>
         </View>
