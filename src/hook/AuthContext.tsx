@@ -1,51 +1,61 @@
-import React, { useState, useEffect, createContext, useContext, ReactChildren, ReactNode } from 'react'
+import React, { useState, useEffect, createContext, useContext } from 'react'
 import firebase from 'firebase'
 import { auth, db } from '../../firebase'
 import * as Google from 'expo-google-app-auth';
+import { userWrite } from '../lib/dbLib';
 
 
 interface AuthContextType {
     currentUser: firebase.User | null,
-    login: (email: string, password: string) => Promise<firebase.auth.UserCredential>
+    logInWithEmail: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
     signup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     signInWithGoogleAsync: () => Promise<string | { cancelled: boolean; error?: undefined; } | { error: boolean; cancelled?: undefined; }>
-    getUserCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    deleteUser: () => Promise<void>
+    getGoogleCredential: () => Promise<firebase.auth.OAuthCredential> | null
+    deleteUserAfterReAuth: () => Promise<{ complete: boolean }>
 }
 
-const defaultValue = {} as AuthContextType
 
-const AuthContext = createContext<AuthContextType>(defaultValue)
+const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
+/**
+ * Return functions about Authentication
+ * 
+ * 
+ * @returns `currentUser`: An user Object.
+ * @returns `logInWithEmail`: Async function to log in using email and password.
+ * @returns `logout`: Async function to log out.
+ * @returns `signup`: Async function to Create a new user using email and password.
+ * @returns `signInWithGoogleAsync`: Async function to sign in with google.
+ * @returns `getGoogleCredential`: Async function to first open google sign in page then return user credential. This credential can be used to re-Authenticate.
+ * @returns `deleteUserAfterReAuth`: Async function to first re-authenticate the user then delete it. This will delete the user data in the RTDB too.
+ * 
+ */
 export const useAuth = () => useContext(AuthContext)
 
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
+export const AuthProvider = ({ children }) => {
+
+    // 用戶 object
     const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
 
-
-    const login = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
+    // email 登入
+    const logInWithEmail = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
         auth.signInWithEmailAndPassword(email, pwd)
     )
 
-
+    // 登出
     const logout = () => auth.signOut()
 
-
+    // email 註冊
     const signup = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
         auth.createUserWithEmailAndPassword(email, pwd)
     )
 
-
-
+    // Google 登入 
     async function signInWithGoogleAsync() {
         try {
-            const result = await Google.logInAsync({
-                androidClientId: "351896815743-ccjllu109b2i8e2en3nh35lrjv02b9cs.apps.googleusercontent.com", //在這裡貼上你的用戶端編號, 記得加引號
-                // iosClientId: YOUR_CLIENT_ID_HERE,
-                scopes: ['profile', 'email'],
-            });
+            const result = await getGoogleLogInResult()
 
             if (result.type === 'success') {
                 onSignIn(result)
@@ -59,42 +69,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     function onSignIn(googleUser) {
-        var unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
-            unsubscribe();
-            // 似乎是listener的常用語法，藉由呼叫函式本身，讓後面的程式只運行一次就好
-            if (!isUserEqual(googleUser, firebaseUser)) {
-                var credential = firebase.auth.GoogleAuthProvider.credential(
-                    googleUser.idToken,
-                    googleUser.accessToken
-                );
 
-                firebase.auth().signInWithCredential(credential)
-                    .catch((error) => { alert('onSignInCredential' + error) });
-            } else {
-                console.log('User already signed-in Firebase.');
-            }
-        });
-    }
-    function isUserEqual(googleUser, firebaseUser) {
-        if (firebaseUser) {
-            var providerData = firebaseUser.providerData;
-            for (var i = 0; i < providerData.length; i++) {
-                if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
-                    providerData[i].uid === googleUser.user.id) {
-                    // We don't need to reauth the Firebase connection.
-                    return true;
-                }
-            }
-        }
-        return false;
+        let credential = firebase.auth.GoogleAuthProvider.credential(
+            googleUser.idToken,
+            googleUser.accessToken
+        );
+
+        firebase.auth().signInWithCredential(credential)
+            .catch((error) => { alert('onSignInCredential' + error) });
     }
 
-    const getUserCredential = async () => {
-        const result = await Google.logInAsync({
-            androidClientId: "351896815743-ccjllu109b2i8e2en3nh35lrjv02b9cs.apps.googleusercontent.com", //在這裡貼上你的用戶端編號, 記得加引號
-            // iosClientId: YOUR_CLIENT_ID_HERE,
-            scopes: ['profile', 'email'],
-        });
+
+    /** 
+     * 取得 google 憑證
+     */
+    const getGoogleCredential = async () => {
+        const result = await getGoogleLogInResult()
         if (result.type == 'success') {
             const credential = firebase.auth.GoogleAuthProvider.credential(
                 result.idToken,
@@ -105,27 +95,56 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return null
     }
 
+    // 取得google用戶資料
+    const getGoogleLogInResult = async () => await Google.logInAsync({
+        //在這裡貼上你的用戶端編號
+        androidClientId: "351896815743-ccjllu109b2i8e2en3nh35lrjv02b9cs.apps.googleusercontent.com",
+        // iosClientId: "YOUR_CLIENT_ID_HERE",
+        scopes: ['profile', 'email'],
+    })
 
-    const deleteUser = async () => {
+    // 刪除用戶 (內含re-auth) 
+    const deleteUserAfterReAuth = async () => {
         try {
-            const credential = await getUserCredential()
+            // 先取得憑證
+            let credential
+            if (currentUser.providerData[0].providerId === 'google.com') {
+                credential = await getGoogleCredential()
+            }
+
+            // 用憑證 re-auth
             await currentUser.reauthenticateWithCredential(credential)
+
+            // 刪除帳號
             await currentUser.delete()
+
+            // 刪除該帳號的資料
             const userRef = db.ref(`/users/${currentUser.uid}`)
-            const res = await userRef.remove()
+            await userRef.remove()
+            return { complete: true }
         } catch (e) {
             console.log(e.message)
+            return { complete: false }
         }
     }
 
-
+    // 監聽登入狀態
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
             if (user) {
-
+                console.log('log in with', user.email)
+                userWrite(user, {
+                    email: user.email,
+                    logInBy: user.providerData[0].providerId,
+                    profile_picture: user.photoURL,
+                    username: user.displayName,
+                    createAt: user.metadata.creationTime,
+                    lastLogInAt: user.metadata.lastSignInTime,
+                })
+                console.log(user)
             } else {
-
+                console.log('Not log in')
             }
         })
         return unsubscribe
@@ -133,13 +152,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
     const value: AuthContextType = {
-        login,
+        logInWithEmail,
         logout,
         signup,
         currentUser,
         signInWithGoogleAsync,
-        getUserCredential,
-        deleteUser
+        getGoogleCredential,
+        deleteUserAfterReAuth
     }
 
 

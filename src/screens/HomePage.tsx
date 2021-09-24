@@ -9,7 +9,7 @@ import useNavigate from '../hook/useNavigate'
 
 
 const HomePage = () => {
-    const { currentUser, logout, getUserCredential, deleteUser } = useAuth()
+    const { currentUser, logout, deleteUserAfterReAuth } = useAuth()
 
     const userRef = db.ref('/users/' + currentUser?.uid)
 
@@ -28,8 +28,8 @@ const HomePage = () => {
 
     const onDeleteUser = async () => {
         try {
-            await deleteUser()
-            oneWayNavigate('LogIn')
+            const { complete } = await deleteUserAfterReAuth()
+            if (complete) oneWayNavigate('LogIn')
         } catch (e) {
             console.log(e.message)
             console.log(e.code)
@@ -43,9 +43,10 @@ const HomePage = () => {
     useEffect(() => {
         userRef.on('value', (snap: DataSnapShot) => {
             if (!snap.val()) return
-            setEmail(snap.val().email)
-            setLogInBy(snap.val().logInBy)
-            checkUserName(snap.val().username)
+            const { email, logInBy, username } = snap.val()
+            setEmail(email)
+            setLogInBy(logInBy)
+            checkUserName(username)
         })
 
         return () => { userRef.off() }

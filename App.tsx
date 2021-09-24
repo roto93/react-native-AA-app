@@ -23,7 +23,6 @@ const AppNavigation: React.FC = () => {
   const showToastOptions = useMappedState(state => state.showToastReducer.options)
   const setShowToast = (bool: boolean) => dispatch(Action.setShowToast(bool))
   const dispatch = useDispatch()
-  console.log(JSON.stringify(showToastOptions))
 
   return (
     <NavigationContainer >

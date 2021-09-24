@@ -2,12 +2,8 @@ import React from 'react'
 import { DataSnapShot, HomePageProp, RootStackParamList } from '../../types/types'
 import { useNavigation } from '@react-navigation/core'
 
-
-interface IUseNavigate {
-    oneWayNavigate: IOneWayNavigate
-}
-
 type IOneWayNavigate = (name: keyof RootStackParamList) => void
+
 
 const useNavigate = () => {
 
@@ -21,9 +17,11 @@ const useNavigate = () => {
         })
     }
 
+    // 可返回的換頁
+    const navigate = (name: keyof RootStackParamList) => navigation.navigate(name)
 
 
-    return { oneWayNavigate }
+    return { oneWayNavigate, navigate }
 }
 
 export default useNavigate

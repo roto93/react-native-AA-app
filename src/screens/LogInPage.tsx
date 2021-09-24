@@ -17,17 +17,17 @@ const LogInPage = () => {
     const dispatch = useDispatch()
 
     const onGoogleSignIn = async () => {
-        if (!currentUser) {
-            try {
-                await signInWithGoogleAsync()
-                navigation.reset({
-                    index: 0,
-                    routes: [{ name: "Home" }]
-                })
-            } catch (e) {
-                console.log(e)
-            }
+        if (currentUser) return
+        try {
+            const res = await signInWithGoogleAsync()
+            if (res) navigation.reset({
+                index: 0,
+                routes: [{ name: "Home" }]
+            })
+        } catch (e) {
+            console.log(e)
         }
+
     }
 
     useEffect(() => {
@@ -48,7 +48,7 @@ const LogInPage = () => {
             <TouchableOpacity style={styles.loginButton} onPress={onGoogleSignIn} >
                 <Text>Google 登入</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { setShowToast(true, { text: 'Hi', coverScreen: true }) }} >
+            <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
                 <Text>Facebook 登入</Text>
             </TouchableOpacity>
         </View>
