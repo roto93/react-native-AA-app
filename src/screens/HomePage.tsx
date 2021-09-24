@@ -1,14 +1,14 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button } from 'react-native'
-import { useAuth } from '../../hook/AuthContext'
+import { useAuth } from '../hook/AuthContext'
 import { db } from '../../firebase'
 import { DataSnapShot, HomePageProp } from '../../types/types'
 
 
 
 const HomePage = () => {
-    const { currentUser, logout, userEmail } = useAuth()
+    const { currentUser, logout, getUserCredential, deleteUser } = useAuth()
 
     const userRef = db.ref('/users/' + currentUser?.uid)
 
@@ -19,10 +19,21 @@ const HomePage = () => {
 
     const write = () => {
         userRef.set({
-            userEmail: currentUser?.email,
             profile_picture: currentUser?.photoURL,
             logInBy: currentUser?.providerData[0]?.providerId
         })
+    }
+
+    const onDeleteUser = async () => {
+        try {
+            await deleteUser()
+            navigation.reset({
+                index: 0,
+                routes: [{ name: 'LogIn' }]
+            })
+        } catch (e) {
+            console.log(e.message)
+        }
     }
 
     const checkUserName = (username: string) => {
@@ -53,9 +64,9 @@ const HomePage = () => {
             <Text style={styles.title}>Home page</Text>
             <Button title={"Log out"} onPress={onLogout} />
 
-            <Text>{userEmail}</Text>
             <Text>Your log in methed is {logInBy === 'password' ? 'email and password' : logInBy}</Text>
             <Button title={"write"} onPress={write} />
+            <Button title={"delete"} onPress={onDeleteUser} />
         </View>
     )
 }

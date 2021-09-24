@@ -1,8 +1,8 @@
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Button, StyleSheet, Text, View, LogBox } from 'react-native';
-import { AuthProvider } from './hook/AuthContext';
-import { useAuth } from './hook/AuthContext'
+import { AuthProvider } from './src/hook/AuthContext';
+import { useAuth } from './src/hook/AuthContext'
 import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomePage from './src/screens/HomePage';
@@ -16,7 +16,6 @@ const Stack = createNativeStackNavigator<RootStackParamList>()
 
 const AppNavigation: React.FC = () => {
   const { currentUser } = useAuth()
-  console.log(JSON.stringify(currentUser))
 
 
 

@@ -1,7 +1,7 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity, TextInput, Dimensions } from 'react-native'
-import { useAuth } from '../../hook/AuthContext'
+import { useAuth } from '../hook/AuthContext'
 import { SignUpPageProp } from '../../types/types'
 
 const winY: number = Dimensions.get('window').height
@@ -25,10 +25,8 @@ const SignUpPage = () => {
         }
         try {
             const res = await signup(email, password)
-            console.log(res.user.providerData[0].providerId)
             navigation.navigate('LogIn')
         } catch (e) {
-            console.log(e.message)
         }
     }
 
