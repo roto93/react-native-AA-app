@@ -19,11 +19,7 @@ const HomePage = () => {
     const { oneWayNavigate } = useNavigate()
 
     const write = () => {
-        userRef.set({
-            profile_picture: currentUser?.photoURL,
-            logInBy: currentUser?.providerData[0]?.providerId,
-            email: currentUser.email
-        })
+        userRef.child("list").set([{ id: 1, name: 'aaa' }, { id: 2, name: 'bbb' }])
     }
 
     const onDeleteUser = async () => {

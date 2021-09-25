@@ -7,27 +7,37 @@ import { RowView } from '../components/RowView'
 import * as Linking from 'expo-linking'
 import { useDispatch } from 'redux-react-hook'
 import * as Action from '../redux/action'
+import useNavigate from '../hook/useNavigate'
 
 const winY: number = Dimensions.get('window').height
 
 const LogInPage = () => {
-    const { signInWithGoogleAsync, currentUser } = useAuth()
+    const { signInWithGoogleAsync, currentUser, signInWithFacebookAsync } = useAuth()
     const navigation = useNavigation<LogInPageProp>()
     const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
     const dispatch = useDispatch()
+    const { oneWayNavigate } = useNavigate()
 
     const onGoogleSignIn = async () => {
         if (currentUser) return
         try {
             const res = await signInWithGoogleAsync()
-            if (res) navigation.reset({
-                index: 0,
-                routes: [{ name: "Home" }]
-            })
+            if (res) oneWayNavigate("Home")
         } catch (e) {
             console.log(e)
         }
 
+    }
+
+    const onFacebookSignIn = async () => {
+        if (currentUser) return
+        try {
+            const res = await signInWithFacebookAsync()
+            return res
+        } catch (e) {
+            console.log(e.message)
+            return { error: true }
+        }
     }
 
     useEffect(() => {
@@ -48,7 +58,7 @@ const LogInPage = () => {
             <TouchableOpacity style={styles.loginButton} onPress={onGoogleSignIn} >
                 <Text>Google 登入</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
+            <TouchableOpacity style={styles.loginButton} onPress={onFacebookSignIn} >
                 <Text>Facebook 登入</Text>
             </TouchableOpacity>
         </View>
