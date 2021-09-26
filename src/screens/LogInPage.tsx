@@ -13,39 +13,25 @@ const winY: number = Dimensions.get('window').height
 
 const LogInPage = () => {
     const { signInWithGoogleAsync, currentUser, signInWithFacebookAsync } = useAuth()
-    const navigation = useNavigation<LogInPageProp>()
     const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
     const dispatch = useDispatch()
     const { oneWayNavigate } = useNavigate()
 
-    const onGoogleSignIn = async () => {
-        if (currentUser) return
-        try {
-            const res = await signInWithGoogleAsync()
-            if (res) oneWayNavigate("Home")
-        } catch (e) {
-            console.log(e)
-        }
 
-    }
-
-    const onFacebookSignIn = async () => {
+    const onSignIn = async (method: "Google" | "Facebook") => {
         if (currentUser) return
-        try {
-            const res = await signInWithFacebookAsync()
-            return res
-        } catch (e) {
-            console.log(e.message)
-            return { error: true }
+        switch (method) {
+            case "Google":
+                return await signInWithGoogleAsync()
+            case "Facebook":
+                return await signInWithFacebookAsync()
+            default: return null
         }
     }
 
     useEffect(() => {
         if (currentUser) {
-            navigation.reset({
-                index: 0,
-                routes: [{ name: 'Home' }]
-            })
+            oneWayNavigate("Home")
         }
     }, [currentUser])
 
@@ -55,10 +41,10 @@ const LogInPage = () => {
             <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
                 <Text>Email 登入</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={onGoogleSignIn} >
+            <TouchableOpacity style={styles.loginButton} onPress={() => { onSignIn("Google") }} >
                 <Text>Google 登入</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={onFacebookSignIn} >
+            <TouchableOpacity style={styles.loginButton} onPress={() => { onSignIn("Facebook") }} >
                 <Text>Facebook 登入</Text>
             </TouchableOpacity>
         </View>

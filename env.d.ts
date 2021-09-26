@@ -6,5 +6,7 @@ declare module "@env" {
     export const storageBucket = "",
     export const messagingSenderId = "",
     export const appId = "",
-    export const measurementId = ""
+    export const measurementId = "",
+    export const googleLoginAndroidClientId: "",
+    export const facebookLoginAppId: ""
 }

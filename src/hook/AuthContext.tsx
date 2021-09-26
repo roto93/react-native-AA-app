@@ -4,19 +4,23 @@ import { auth, db } from '../../firebase'
 import * as Google from 'expo-google-app-auth';
 import * as Facebook from 'expo-facebook'
 import { userWrite } from '../lib/dbLib';
-
+import { googleLoginAndroidClientId, facebookLoginAppId } from '@env'
 
 interface AuthContextType {
     currentUser: firebase.User | null,
     logInWithEmail: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
     emailSignup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
-    signInWithGoogleAsync: () => Promise<string | { cancelled: boolean; error?: undefined; } | { error: boolean; cancelled?: undefined; }>
+    signInWithGoogleAsync: () => Promise<LoginResult>
     getGoogleCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    deleteUserAfterReAuth: () => Promise<{ complete: boolean }>
-    signInWithFacebookAsync: () => Promise<any>
+    signInWithFacebookAsync: () => Promise<LoginResult>
+    getFacebookCredential: () => Promise<firebase.auth.OAuthCredential> | null
+    deleteUserAfterReAuth: () => Promise<LoginResult>
 }
 
+interface LoginResult {
+    complete: boolean
+}
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
@@ -28,8 +32,10 @@ const AuthContext = createContext<AuthContextType>({} as AuthContextType)
  * @returns `logInWithEmail`: Async function to log in using email and password.
  * @returns `logout`: Async function to log out.
  * @returns `emailSignup`: Async function to Create a new user using email and password.
- * @returns `signInWithGoogleAsync`: Async function to sign in with google.
+ * @returns `signInWithGoogleAsync`: Async function to sign in by google.
  * @returns `getGoogleCredential`: Async function to first open google sign in page then return user credential. This credential can be used to re-Authenticate.
+ * @returns `signInWithFacebookAsync`: Async function to sign in by facebook.
+ * @returns `getFacebookCredential` Async function to first open facebook sign in page then return user credential> This credential can be used to re-Authenticate.
  * @returns `deleteUserAfterReAuth`: Async function to first re-authenticate the user then delete it. This will delete the user data in the RTDB too.
  * 
  */
@@ -61,14 +67,14 @@ export const AuthProvider = ({ children }) => {
             const result = await getGoogleLogInResult()
 
             if (result.type !== 'success') {
-                return { cancelled: true };
+                return { complete: false };
             }
 
             const res = await signInFirebaseByGoogle(result)
-            if (res) return result.accessToken;
+            if (res) return { complete: true };
 
         } catch (e) {
-            return { error: true };
+            return { complete: false };
         }
     }
 
@@ -105,18 +111,22 @@ export const AuthProvider = ({ children }) => {
     // 取得google用戶資料
     const getGoogleLogInResult = async () => await Google.logInAsync({
         //在這裡貼上你的用戶端編號
-        androidClientId: "351896815743-ccjllu109b2i8e2en3nh35lrjv02b9cs.apps.googleusercontent.com",
+        androidClientId: googleLoginAndroidClientId,
         // iosClientId: "YOUR_CLIENT_ID_HERE",
         scopes: ['profile', 'email'],
     })
 
 
+    // 啟用 facebook 功能
+    const initialezeFacebook = () => Facebook.initializeAsync({
+        appId: facebookLoginAppId,      // 換成你的AppId
+    });
+
+
     // facebook登入
     async function signInWithFacebookAsync() {
         try {
-            await Facebook.initializeAsync({
-                appId: "241246337961320",      // 換成你的AppId
-            });
+            await initialezeFacebook()
 
             //{type,token,expirationDate,permissions,declinedPermissions,}
             const result = await Facebook.logInWithReadPermissionsAsync({
@@ -125,12 +135,11 @@ export const AuthProvider = ({ children }) => {
             if (result.type === 'success') {
                 // 利用 FB 提供的圖形API fetch 用戶名
                 // const response = await fetch(`https://graph.facebook.com/me?access_token=${result.token}`);
-                signInFirebaseByFacebook(result.token)
+                await signInFirebaseByFacebook(result.token)
 
-                console.log('Logged in!');
-            } else {
-                console.log('type = cancel')
-            }
+                return { complete: true }
+            } throw new Error("signInFirebaseByFacebook failed");
+
         } catch ({ message }) {
             alert(`Facebook Login Error: ${message}`);
         }
@@ -142,9 +151,7 @@ export const AuthProvider = ({ children }) => {
         const credential = firebase.auth.FacebookAuthProvider.credential(token)
         try {
             const res = await auth.signInWithCredential(credential)
-            if (res) {
-                console.log(res)
-            }
+            return res
         } catch (e) {
             console.log('signInFirebaseByFacebook error: ', e.message)
         }
@@ -154,9 +161,7 @@ export const AuthProvider = ({ children }) => {
     // 取得 Facebook 憑證 
     const getFacebookCredential = async () => {
 
-        await Facebook.initializeAsync({
-            appId: "241246337961320",      // 換成你的AppId
-        });
+        await initialezeFacebook()
 
         const result = await getFacebookLogInResult()
 
@@ -224,7 +229,6 @@ export const AuthProvider = ({ children }) => {
                     create_at: user.metadata.creationTime,
                     last_log_in_at: user.metadata.lastSignInTime,
                 })
-                console.log(user)
             } else {
                 console.log('Not log in')
             }
@@ -241,7 +245,8 @@ export const AuthProvider = ({ children }) => {
         signInWithGoogleAsync,
         getGoogleCredential,
         deleteUserAfterReAuth,
-        signInWithFacebookAsync
+        signInWithFacebookAsync,
+        getFacebookCredential
     }
 
 

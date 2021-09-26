@@ -29,7 +29,8 @@
     "react-native-screens": "~3.4.0",
     "react-native-web": "^0.17.1",
     "redux": "^4.1.1",
-    "redux-react-hook": "^4.0.3"
+    "redux-react-hook": "^4.0.3",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.9.0",
