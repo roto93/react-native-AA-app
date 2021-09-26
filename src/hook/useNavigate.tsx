@@ -1,5 +1,5 @@
 import React from 'react'
-import { DataSnapShot, HomePageProp, RootStackParamList } from '../../types/types'
+import { HomePageProp, RootStackParamList } from '../../types/types'
 import { useNavigation } from '@react-navigation/core'
 
 type IOneWayNavigate = (name: keyof RootStackParamList) => void

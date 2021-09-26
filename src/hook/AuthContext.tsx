@@ -221,7 +221,8 @@ export const AuthProvider = ({ children }) => {
             setCurrentUser(user)
             if (user) {
                 console.log('log in with', user.email)
-                userWrite(user, {
+                userWrite(user.uid, {
+                    uid: user.uid,
                     email: user.email,
                     log_in_by: user.providerData[0].providerId,
                     profile_picture: user.photoURL,

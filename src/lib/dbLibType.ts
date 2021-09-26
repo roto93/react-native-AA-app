@@ -9,7 +9,7 @@ export type IUser = firebase.User
 /**
  * ### Interface of Database User Data
  * 
- * The data stored at "user" reference in Firebase Real Time Database.
+ * The data stored at "user" reference in Firebase RealTime Database.
  * 
  * @param `email`
  * @param `logInBy`
@@ -21,6 +21,7 @@ export type IUser = firebase.User
  * @param `createAt`
  */
 export interface IDBUserData {
+    uid?: string,
     email?: string,
     log_in_by?: string,
     profile_picture?: string,
@@ -49,7 +50,6 @@ export interface IDBSpending {
     amount: number,
     confirmed: boolean,
     weighting: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 'None',
-
 
 }
 
