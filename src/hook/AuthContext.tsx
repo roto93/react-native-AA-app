@@ -11,14 +11,17 @@ interface AuthContextType {
     logInWithEmail: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
     emailSignup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
-    signInWithGoogleAsync: () => Promise<LoginResult>
+    signInWithGoogleAsync: () => Promise<IAsyncResult>
     getGoogleCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    signInWithFacebookAsync: () => Promise<LoginResult>
+    signInWithFacebookAsync: () => Promise<IAsyncResult>
     getFacebookCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    deleteUserAfterReAuth: () => Promise<LoginResult>
+    deleteUserAfterReAuth: () => Promise<IAsyncResult>
 }
 
-interface LoginResult {
+/**
+ * Interface of async function result.
+ */
+export interface IAsyncResult {
     complete: boolean
 }
 
@@ -223,7 +226,7 @@ export const AuthProvider = ({ children }) => {
                 console.log('log in with', user.email)
                 userWrite(user.uid, {
                     uid: user.uid,
-                    email: user.email,
+                    email: user.providerData[0].email,
                     log_in_by: user.providerData[0].providerId,
                     profile_picture: user.photoURL,
                     username: user.displayName,

@@ -19,10 +19,6 @@ const HomePage = () => {
     const [logInBy, setLogInBy] = useState('');
     const { oneWayNavigate } = useNavigate()
 
-    const write = () => {
-        userRef.child("list").set([{ id: 1, name: 'aaa' }, { id: 2, name: 'bbb' }])
-    }
-
     const onDeleteUser = async () => {
         try {
             const { complete } = await deleteUserAfterReAuth()
@@ -46,12 +42,11 @@ const HomePage = () => {
 
 
     }
-
     useEffect(() => {
         console.log('run useEffect')
         userRef.on('value', (snap) => {
             const data: IDBUserData = snap.val()
-            setLogInBy(data.log_in_by)
+            setLogInBy(data?.log_in_by)
 
         })
 
@@ -61,7 +56,7 @@ const HomePage = () => {
     useEffect(() => {
         const getUserDataOnceAsync = async () => {
             const data: IDBUserData = (await userRef.get()).val()
-            setLogInBy(data.log_in_by)
+            setLogInBy(data?.log_in_by)
         }
         getUserDataOnceAsync().catch(e => console.log(e.message))
     }, [currentUser])
@@ -76,7 +71,6 @@ const HomePage = () => {
             <Button title={"Log out"} onPress={onLogout} />
             <Text>{currentUser?.email}</Text>
             <Text>Your login methed is {logInBy === 'password' ? 'email and password' : logInBy}</Text>
-            <Button title={"write"} onPress={write} />
             <Button title={"delete"} onPress={onDeleteUser} />
 
             <TextInput
