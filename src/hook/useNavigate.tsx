@@ -4,7 +4,6 @@ import { useNavigation } from '@react-navigation/core'
 
 type IOneWayNavigate = (name: keyof RootStackParamList) => void
 
-
 const useNavigate = () => {
 
     const navigation = useNavigation<HomePageProp>()

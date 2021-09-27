@@ -1,10 +1,14 @@
-import { IUser, IDBUserData, IDBRelationRequest } from './dbLibType';
-import firebase from 'firebase'
+import { IDBUserData } from './dbLibType';
 import { db } from "../../firebase";
-import { IAsyncResult, useAuth } from '../hook/AuthContext';
-import { LogInResult } from 'expo-google-app-auth';
+import { IAsyncResult } from '../hook/AuthContext';
 
 
+/**
+ * ### Update an user's data.
+ * 
+ * @param userId The user id which is going to be used to write data.
+ * @param data The data to be written.
+ */
 export const userWrite = (userId: string, data: IDBUserData) => {
 
     const userRef = db.ref(`/users/${userId}`)
@@ -12,35 +16,33 @@ export const userWrite = (userId: string, data: IDBUserData) => {
     entries.forEach(([key, value]) => {
         if (key === 'relation_to_be_confirmed') {
             sendRequestToUser(userId, value)
+                .catch(e => console.log('userWrite error: ', e.message))
         } else {
             userRef.child(key).set(value)
+
+                .catch(e => console.log('userWrite error: ', e.message))
         }
     })
-
+    console.log("userWrite done")
 }
 
+export const requestWrite = (userId: string, value: IDBRequest) => {
+    const requestRef = db.ref(`/requests/${userId}`)
+    requestRef.push().set(value)
+}
+
+
+/**
+ * ### Send a request to make a relation. waiting for partner to confirm.
+ * 
+ * @param userId The user id of the partner who you want to make a relation.
+ * @param myId The user id of the curren user
+ */
 export const sendRequestToUser = async (userId: string, myId: string): Promise<IAsyncResult> => {
     try {
-        const userRequestRef = db.ref(`/users/${userId}/relations_to_be_confirmed`)
-
-        // 取得對方的 relation_to_be_confirmed
-        const snap = await userRequestRef.get()
-
-        // 若無法取得
-        if (!snap.exists()) {
-            userRequestRef.push().set(myId)
-            return { complete: true }
-        }
-
-        // 檢查是否已存在自己發出的請求
-        const requestSenderList = Object.values(snap.val())
-
-        // 若有，return
-        if (requestSenderList.includes(myId)) return { complete: false }
-
-        // 若無，新增請求
-        await userRequestRef.push().set(myId)
-        return { complete: true }
+        // 取得對方的 request
+        const userRequestsRef = db.ref(`/relation_requests/${userId}/`)
+        await userRequestsRef.child(myId).set((new Date).toUTCString())
 
     } catch (e) {
         console.log(e.message)

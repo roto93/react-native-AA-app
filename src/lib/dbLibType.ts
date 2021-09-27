@@ -29,8 +29,9 @@ export interface IDBUserData {
     last_log_in_at?: string,
     create_at?: string,
     relations?: string[]
-    relations_to_be_confirmed?: IDBRelationRequest[]
 }
+
+
 
 export interface IDBRelation {
     relation_id?: string
@@ -38,10 +39,6 @@ export interface IDBRelation {
     partner_uid?: string,
     total_amount?: number,
     spendings_to_be_confirmed?: IDBSpending[]
-}
-
-export interface IDBRelationRequest {
-    request_sender_uid: string
 }
 
 export interface IDBSpending {

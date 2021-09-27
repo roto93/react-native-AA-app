@@ -33,15 +33,21 @@ const HomePage = () => {
     const onInvite = async () => {
         // 查詢用戶
         const partnerDataSnap = await db.ref(`/users/`).orderByChild('email').equalTo(emailToInvite).once('value')
-        if (!partnerDataSnap.exists()) return console.log('not exists')
+        if (!partnerDataSnap.exists()) return alert('用戶不存在')
         // 將自己的uid寫入對方的 relation_to_be_confirmed
-        const partnerData: IDBUserData = partnerDataSnap.val()
+        const partnerData = partnerDataSnap.val() // {"7xMF23...":{"email":"...", ...}}
 
-        const partnerId = Object.keys(partnerDataSnap.val())[0]
+        const partnerId = Object.keys(partnerData)[0]
         sendRequestToUser(partnerId, currentUser.uid)
 
+    }
+
+
+    const onCheck = async () => {
 
     }
+
+
     useEffect(() => {
         console.log('run useEffect')
         userRef.on('value', (snap) => {
@@ -53,7 +59,9 @@ const HomePage = () => {
         return () => { userRef.off() }
     }, [])
 
+
     useEffect(() => {
+        if (!currentUser) return
         const getUserDataOnceAsync = async () => {
             const data: IDBUserData = (await userRef.get()).val()
             setLogInBy(data?.log_in_by)
@@ -79,6 +87,7 @@ const HomePage = () => {
                 style={styles.textInput}
             />
             <Button title={"invite"} onPress={onInvite} />
+            <Button title="Check requests" onPress={onCheck} />
         </View>
     )
 }
