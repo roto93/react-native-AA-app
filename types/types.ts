@@ -5,7 +5,8 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 export type RootStackParamList = {
     Home: undefined,
     SignUp: undefined,
-    LogIn: undefined
+    LogIn: undefined,
+    Request: undefined,
 }
 
 export type HomePageProp = NativeStackNavigationProp<RootStackParamList, 'Home'>

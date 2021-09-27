@@ -7,9 +7,9 @@ import { auth, db } from '../../firebase'
 export type IUser = firebase.User
 
 /**
- * ### Interface of Database User Data
+ * ### Interface of Database User Data Props
  * 
- * The data stored at "user" reference in Firebase RealTime Database.
+ * These props are used to stored data at "user" reference in Firebase RealTime Database.
  * 
  * @param `email`
  * @param `logInBy`
@@ -20,7 +20,7 @@ export type IUser = firebase.User
  * @param `lastLogIn`
  * @param `createAt`
  */
-export interface IDBUserData {
+export interface IDBUserDataProps {
     uid?: string,
     email?: string,
     log_in_by?: string,
@@ -28,19 +28,30 @@ export interface IDBUserData {
     username?: string,
     last_log_in_at?: string,
     create_at?: string,
-    relations?: string[]
+    relations?: string,
+    partner_list?: string
 }
 
 
-
-export interface IDBRelation {
+/**
+ * These props are used to create a new relation.
+ * 
+ * @param `relation_id`
+ * @param `creater_uid`
+ * @param `partner_uid`
+ * @param `spendings_to_be_confirmed`
+ */
+export interface IDBRelationProps {
     relation_id?: string
     creater_uid?: string,
     partner_uid?: string,
-    total_amount?: number,
     spendings_to_be_confirmed?: IDBSpending[]
 }
 
+
+/**
+ * This is the interface of spending. Every Spending should has these props.
+ */
 export interface IDBSpending {
     creater_uid: string,
     spender_uid: string,
@@ -50,3 +61,9 @@ export interface IDBSpending {
 
 }
 
+
+export interface IpartnerProps {
+    id: string,
+    email: string,
+    username: string,
+}

@@ -13,6 +13,7 @@ import Toast from './src/components/Toast';
 import { StoreContext, useMappedState, useDispatch } from 'redux-react-hook'
 import * as Action from './src/redux/action'
 import store from './src/redux/store'
+import RequestPage from './src/screens/RequestPage';
 
 LogBox.ignoreLogs(['Setting a timer for a long'])
 
@@ -30,6 +31,7 @@ const AppNavigation: React.FC = () => {
         <Stack.Screen name={"LogIn"} component={LogInPage} />
         <Stack.Screen name={"Home"} component={HomePage} />
         <Stack.Screen name={"SignUp"} component={SignUpPage} />
+        <Stack.Screen name={"Request"} component={RequestPage} />
 
       </Stack.Navigator>
       <Toast isVisible={showToast} setIsVisible={setShowToast} options={showToastOptions} />

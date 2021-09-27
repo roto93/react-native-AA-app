@@ -3,11 +3,10 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, View, Button, TextInput } from 'react-native'
 import { useAuth } from '../hook/AuthContext'
 import { db } from '../../firebase'
-import { HomePageProp } from '../../types/types'
 import useNavigate from '../hook/useNavigate'
-import { IDBUserData, IUser } from '../lib/dbLibType'
-import { checkUserRequest, getUserProfile, sendRequestToUser } from '../lib/dbLib'
-import RequestModal from '../components/RequestModal'
+import { IDBUserDataProps } from '../lib/dbLibType'
+import { sendRequestToUser } from '../lib/dbLib'
+import RequestModal from './RequestPage'
 
 
 
@@ -16,7 +15,7 @@ const HomePage = () => {
     const userRef = db.ref('/users/' + currentUser?.uid)
     const [emailToInvite, setEmailToInvite] = useState('');
     const [logInBy, setLogInBy] = useState('');
-    const { oneWayNavigate } = useNavigate()
+    const { oneWayNavigate, navigate } = useNavigate()
     const [showRequestModal, setShowRequestModal] = useState(false);
 
     const onDeleteUser = async () => {
@@ -31,6 +30,7 @@ const HomePage = () => {
 
     // 寄送邀請 
     const onInvite = async () => {
+
         try {
             // 查詢用戶
             const partnerDataSnap = await db.ref(`/users/`).orderByChild('email').equalTo(emailToInvite).once('value')
@@ -47,13 +47,15 @@ const HomePage = () => {
 
     }
 
-    const onCheck = () => setShowRequestModal(true)
+    const onCheck = () => {
+        navigate("Request")
+    }
 
 
     useEffect(() => {
         console.log('run useEffect')
         userRef.on('value', (snap) => {
-            const data: IDBUserData = snap.val()
+            const data: IDBUserDataProps = snap.val()
             setLogInBy(data?.log_in_by)
 
         })
@@ -65,7 +67,7 @@ const HomePage = () => {
     useEffect(() => {
         if (!currentUser) return
         const getUserDataOnceAsync = async () => {
-            const data: IDBUserData = (await userRef.get()).val()
+            const data: IDBUserDataProps = (await userRef.get()).val()
             setLogInBy(data?.log_in_by)
         }
         getUserDataOnceAsync().catch(e => console.log(e.message))
@@ -90,7 +92,6 @@ const HomePage = () => {
             />
             <Button title={"invite"} onPress={onInvite} />
             <Button title="Check requests" onPress={onCheck} />
-            <RequestModal isVisible={showRequestModal} dismiss={() => { setShowRequestModal(false) }} />
         </View>
     )
 }

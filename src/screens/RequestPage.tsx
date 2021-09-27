@@ -1,11 +1,10 @@
-import React, { useState, useEffect, memo } from 'react'
+import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import Modal from 'react-native-modal'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
-import { checkUserRequest } from '../lib/dbLib'
+import { addNewPartnerToList, checkUserRequest, createRelation } from '../lib/dbLib'
 
-const RequestModal = ({ isVisible, dismiss }) => {
+const RequestPage = () => {
     const { currentUser } = useAuth()
     const [requestArray, setRequestArray] = useState([]);
     const [isFetching, setIsFetching] = useState(true);
@@ -30,33 +29,25 @@ const RequestModal = ({ isVisible, dismiss }) => {
 
 
     return (
-        <Modal
-            isVisible={isVisible}
-            useNativeDriver
-            hideModalContentWhileAnimating
-            onBackButtonPress={dismiss}
-            onBackdropPress={dismiss}
-            animationIn={'zoomIn'}
-            animationOut={'zoomOut'}
-            style={{ margin: 0, alignItems: 'center', }}
-        >
-            <View style={styles.container}>
-                <Text style={{ marginBottom: 24, }}>你有{requestArray.length}個請求</Text>
-                {!isFetching && requestArray.map((request) => <Request key={request.at} request={request} />)}
-            </View>
-        </Modal>
+
+        <View style={styles.container}>
+            <Text style={{ marginBottom: 24, }}>你有{requestArray.length}個請求</Text>
+            {!isFetching && requestArray.map((request) => <RequestBox key={request.at} request={request} />)}
+        </View>
+
     )
 }
 
-export default memo(RequestModal)
+export default RequestPage
 
 const styles = StyleSheet.create({
     container: {
-        width: 200,
-        height: 300,
+        width: '100%',
+        flex: 1,
         backgroundColor: '#fff',
-        justifyContent: 'center',
+        justifyContent: 'flex-start',
         alignItems: 'center',
+        paddingVertical: 20
     },
     requestContainer: {
         width: "80%",
@@ -76,22 +67,29 @@ const styles = StyleSheet.create({
 type IRequestProps = {
     request: {
         from: string,
+        fromId: string,
         at: string,
     }
 }
 
-const Request = ({ request }: IRequestProps) => {
-    const { from, at } = request
-    console.log(from, at)
-    const JSDate = new Date(Date.parse(at))
-    const month: string = (JSDate.getMonth() + 1).toString()
-    const date: string = (JSDate.getDate()).toString()
+const RequestBox = ({ request }: IRequestProps) => {
+    const { from, fromId, at } = request
+    const { currentUser } = useAuth()
+    const onConfirm = async () => {
+        try {
+            await createRelation(fromId, currentUser.uid)
+            await addNewPartnerToList(currentUser.uid, fromId)
+        } catch (e) {
+            alert(e.message)
+        }
+    }
+
     return (
         <View style={styles.requestContainer}>
             <Text>{from}</Text>
             <TouchableOpacity
                 style={styles.confirmButton}
-                onPress={() => { }}
+                onPress={onConfirm}
             >
                 <Text>確認</Text>
             </TouchableOpacity>
