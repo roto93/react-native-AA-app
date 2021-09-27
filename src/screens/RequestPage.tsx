@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
 import { addNewPartnerToList, checkUserRequest, createRelation } from '../lib/dbLib'
+import AppLoading from 'expo-app-loading'
 
 const RequestPage = () => {
     const { currentUser } = useAuth()
@@ -10,7 +11,6 @@ const RequestPage = () => {
     const [isFetching, setIsFetching] = useState(true);
 
     useEffect(() => {
-
         const userRequestRef = db.ref(`/relation_requests/${currentUser.uid}`)
         userRequestRef.on('value', (snap) => {
             console.log('data changed')
@@ -27,12 +27,16 @@ const RequestPage = () => {
         }
     }, [])
 
+    if (isFetching) return (
+        <View style={styles.container}>
+            <ActivityIndicator size={40} color="gray" />
+        </View>
 
+    )
     return (
-
         <View style={styles.container}>
             <Text style={{ marginBottom: 24, }}>你有{requestArray.length}個請求</Text>
-            {!isFetching && requestArray.map((request) => <RequestBox key={request.at} request={request} />)}
+            {requestArray.map((request) => <RequestBox key={request.at} request={request} />)}
         </View>
 
     )

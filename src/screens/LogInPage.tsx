@@ -20,12 +20,16 @@ const LogInPage = () => {
 
     const onSignIn = async (method: "Google" | "Facebook") => {
         if (currentUser) return
-        switch (method) {
-            case "Google":
-                return await signInWithGoogleAsync()
-            case "Facebook":
-                return await signInWithFacebookAsync()
-            default: return null
+        try {
+            switch (method) {
+                case "Google":
+                    return await signInWithGoogleAsync()
+                case "Facebook":
+                    return await signInWithFacebookAsync()
+                default: return null
+            }
+        } catch (e) {
+            console.log(e.message)
         }
     }
 

@@ -57,6 +57,12 @@ export const checkUserRequest = async (userId: string): Promise<[string, string]
 }
 
 
+export const checkPartnerList = (userId: string, partnerId: string) => {
+    const userPartnerListRef = db.ref(`/users/${userId}/partner_list/`).get()
+
+}
+
+
 export const createRelation = async (createrId: string, partnerId: string) => {
 
     const relationsRef = db.ref(`/relations/`)
@@ -99,8 +105,8 @@ export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
         email: user2Data.email,
         username: user2Data.username,
     }
-    user1Ref.child('partner_list').push().set(user2)
-    user2Ref.child('partner_list').push().set(user1)
+    user1Ref.child(`partner_list/${user2Id}`).set(user2)
+    user2Ref.child(`partner_list/${user1Id}`).set(user1)
 }
 
 export const addNewRelationToList = async () => {

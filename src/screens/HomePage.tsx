@@ -30,7 +30,7 @@ const HomePage = () => {
 
     // 寄送邀請 
     const onInvite = async () => {
-
+        // check partner_list
         try {
             // 查詢用戶
             const partnerDataSnap = await db.ref(`/users/`).orderByChild('email').equalTo(emailToInvite).once('value')

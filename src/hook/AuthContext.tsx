@@ -60,18 +60,12 @@ export const AuthProvider = ({ children }) => {
 
     // Google 登入 
     async function signInWithGoogleAsync() {
-        try {
-            const result = await getGoogleLogInResult()
-
-            if (result.type !== 'success') {
-                throw Error("signInWithGoogleAsync failed")
-            }
-
-            await signInFirebaseByGoogle(result)
-
-        } catch (e) {
+        const result = await getGoogleLogInResult()
+        if (result.type !== 'success') {
             throw Error("signInWithGoogleAsync failed")
         }
+        await signInFirebaseByGoogle(result)
+
     }
 
 
@@ -81,11 +75,7 @@ export const AuthProvider = ({ children }) => {
             googleUser.idToken,
             googleUser.accessToken
         );
-        try {
-            return await firebase.auth().signInWithCredential(credential)
-        } catch (error) {
-            alert('signInFirebaseByGoogle' + error)
-        }
+        return await firebase.auth().signInWithCredential(credential)
     }
 
 
@@ -121,36 +111,25 @@ export const AuthProvider = ({ children }) => {
 
     // facebook登入
     async function signInWithFacebookAsync() {
-        try {
-            await initialezeFacebook()
+        await initialezeFacebook()
 
-            //{type,token,expirationDate,permissions,declinedPermissions,}
-            const result = await Facebook.logInWithReadPermissionsAsync({
-                permissions: ['public_profile', 'email'],   // 還有其他 permission
-            });
-            if (result.type === 'success') {
-                // 利用 FB 提供的圖形API fetch 用戶名
-                // const response = await fetch(`https://graph.facebook.com/me?access_token=${result.token}`);
-                await signInFirebaseByFacebook(result.token)
-
-                return { complete: true }
-            } throw new Error("signInFirebaseByFacebook failed");
-
-        } catch ({ message }) {
-            alert(`Facebook Login Error: ${message}`);
-        }
+        //{type,token,expirationDate,permissions,declinedPermissions,}
+        const result = await Facebook.logInWithReadPermissionsAsync({
+            permissions: ['public_profile', 'email'],   // 還有其他 permission
+        });
+        if (result.type === 'success') {
+            // 利用 FB 提供的圖形API fetch 用戶名
+            // const response = await fetch(`https://graph.facebook.com/me?access_token=${result.token}`);
+            await signInFirebaseByFacebook(result.token)
+        } throw new Error("signInFirebaseByFacebook failed");
     }
 
 
     // 用 facebook 用戶資料登入 firebase
     const signInFirebaseByFacebook = async (token: string) => {
         const credential = firebase.auth.FacebookAuthProvider.credential(token)
-        try {
-            const res = await auth.signInWithCredential(credential)
-            return res
-        } catch (e) {
-            throw Error("signInFirebaseByFacebook error")
-        }
+        const res = await auth.signInWithCredential(credential)
+        return res
     }
 
 
@@ -180,34 +159,29 @@ export const AuthProvider = ({ children }) => {
 
     // 刪除用戶 (內含re-auth) 
     const deleteUserAfterReAuth = async () => {
-        try {
-            // 先取得憑證
-            let credential
+        // 先取得憑證
+        let credential
 
-            switch (currentUser.providerData[0].providerId) {
-                case 'google.com':
-                    credential = await getGoogleCredential()
-                    break
-                case 'facebook.com':
-                    credential = await getFacebookCredential()
-                    break
-                default:
-                    return null
-            }
-
-            // 用憑證 re-auth
-            await currentUser.reauthenticateWithCredential(credential)
-
-            // 刪除帳號
-            await currentUser.delete()
-
-            // 刪除該帳號的資料
-            const userRef = db.ref(`/users/${currentUser.uid}`)
-            await userRef.remove()
-        } catch (e) {
-            console.log(e.message)
-            throw Error("deleteUserAfterReAuth error")
+        switch (currentUser.providerData[0].providerId) {
+            case 'google.com':
+                credential = await getGoogleCredential()
+                break
+            case 'facebook.com':
+                credential = await getFacebookCredential()
+                break
+            default:
+                return null
         }
+
+        // 用憑證 re-auth
+        await currentUser.reauthenticateWithCredential(credential)
+
+        // 刪除帳號
+        await currentUser.delete()
+
+        // 刪除該帳號的資料
+        const userRef = db.ref(`/users/${currentUser.uid}`)
+        await userRef.remove()
     }
 
     // 監聽登入狀態
