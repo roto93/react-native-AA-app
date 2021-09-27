@@ -1,12 +1,14 @@
 import { useNavigation } from '@react-navigation/core'
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, View, Button, TextInput } from 'react-native'
+import { StyleSheet, Text, View, Button, TextInput, Keyboard } from 'react-native'
 import { useAuth } from '../hook/AuthContext'
 import { db } from '../../firebase'
 import useNavigate from '../hook/useNavigate'
 import { IDBUserDataProps } from '../lib/dbLibType'
-import { sendRequestToUser } from '../lib/dbLib'
+import { checkIsAlreadyPartner, sendRequestToUser } from '../lib/dbLib'
 import RequestModal from './RequestPage'
+import { useDispatch } from 'redux-react-hook'
+import * as Action from '../redux/action'
 
 
 
@@ -17,6 +19,8 @@ const HomePage = () => {
     const [logInBy, setLogInBy] = useState('');
     const { oneWayNavigate, navigate } = useNavigate()
     const [showRequestModal, setShowRequestModal] = useState(false);
+    const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
+    const dispatch = useDispatch()
 
     const onDeleteUser = async () => {
         try {
@@ -30,6 +34,7 @@ const HomePage = () => {
 
     // 寄送邀請 
     const onInvite = async () => {
+        Keyboard.dismiss()
         // check partner_list
         try {
             // 查詢用戶
@@ -39,8 +44,11 @@ const HomePage = () => {
             const partnerData = partnerDataSnap.val() // {"7xMF23...":{"email":"...", ...}}
 
             const partnerId = Object.keys(partnerData)[0]
+            const isAlreadyPartner = await checkIsAlreadyPartner(currentUser.uid, partnerId)
+            if (isAlreadyPartner) throw Error("你們已經是朋友囉! 不能再邀請一次了")
             await sendRequestToUser(partnerId, currentUser.uid)
-
+            setEmailToInvite('')
+            setShowToast(true, { text: "已送出邀請" })
         } catch (e) {
             alert(e.message)
         }
@@ -92,6 +100,7 @@ const HomePage = () => {
             />
             <Button title={"invite"} onPress={onInvite} />
             <Button title="Check requests" onPress={onCheck} />
+            <Button title="test" onPress={() => { }} />
         </View>
     )
 }

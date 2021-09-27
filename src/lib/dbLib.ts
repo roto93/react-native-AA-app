@@ -57,12 +57,6 @@ export const checkUserRequest = async (userId: string): Promise<[string, string]
 }
 
 
-export const checkPartnerList = (userId: string, partnerId: string) => {
-    const userPartnerListRef = db.ref(`/users/${userId}/partner_list/`).get()
-
-}
-
-
 export const createRelation = async (createrId: string, partnerId: string) => {
 
     const relationsRef = db.ref(`/relations/`)
@@ -75,6 +69,7 @@ export const createRelation = async (createrId: string, partnerId: string) => {
     relationsRef.child(newRelationKey).set(newRelation)
 
     await deleteRelationRequest(createrId, partnerId)
+    return newRelationKey
 }
 
 
@@ -109,6 +104,35 @@ export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
     user2Ref.child(`partner_list/${user1Id}`).set(user1)
 }
 
-export const addNewRelationToList = async () => {
+export const addNewRelationToList = async (user1Id: string, user2Id: string, relationId: string) => {
+    const ref1 = db.ref(`/users/${user1Id}/relations/${relationId}`)
+    const ref2 = db.ref(`/users/${user2Id}/relations/${relationId}`)
 
+    ref1.set(true)
+    ref2.set(true)
+
+
+}
+
+
+/**
+ * 
+ * Check in user1's partner_list.
+ * 
+ * return `true` if user2 IS in user1's partner_list
+ * 
+ * return `false` if user2 IS NOT in user1's partner_list
+ * 
+ * ---
+ * 
+ * @param user1Id The user to be checked
+ * @param user2Id The user to check if it's in user's list
+ * @returns 
+ */
+export const checkIsAlreadyPartner = async (user1Id: string, user2Id: string) => {
+    const userPartnerList = (await db.ref(`/users/${user1Id}/partner_list/`).get()).val()
+    if (!userPartnerList) return false
+    const userPartners = Object.keys(userPartnerList)
+    console.log(userPartners)
+    return userPartners.includes(user2Id)
 }

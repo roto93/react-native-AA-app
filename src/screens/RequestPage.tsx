@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
-import { addNewPartnerToList, checkUserRequest, createRelation } from '../lib/dbLib'
+import { addNewPartnerToList, addNewRelationToList, checkUserRequest, createRelation } from '../lib/dbLib'
 import AppLoading from 'expo-app-loading'
 
 const RequestPage = () => {
@@ -81,8 +81,9 @@ const RequestBox = ({ request }: IRequestProps) => {
     const { currentUser } = useAuth()
     const onConfirm = async () => {
         try {
-            await createRelation(fromId, currentUser.uid)
+            const newRelationId = await createRelation(fromId, currentUser.uid)
             await addNewPartnerToList(currentUser.uid, fromId)
+            await addNewRelationToList(currentUser.uid, fromId, newRelationId)
         } catch (e) {
             alert(e.message)
         }
