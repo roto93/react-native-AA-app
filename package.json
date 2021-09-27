@@ -8,9 +8,9 @@
     "eject": "expo eject"
   },
   "dependencies": {
-    "@react-navigation/native": "^6.0.2",
-    "@react-navigation/native-stack": "^6.1.0",
-    "expo": "~42.0.1",
+    "@react-navigation/native": "^6.0.4",
+    "@react-navigation/native-stack": "^6.2.1",
+    "expo": "^42.0.4",
     "expo-application": "~3.2.0",
     "expo-auth-session": "~3.3.1",
     "expo-facebook": "^11.3.1",

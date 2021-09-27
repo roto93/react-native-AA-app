@@ -11,19 +11,13 @@ interface AuthContextType {
     logInWithEmail: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
     emailSignup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
-    signInWithGoogleAsync: () => Promise<IAsyncResult>
+    signInWithGoogleAsync: () => Promise<any>
     getGoogleCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    signInWithFacebookAsync: () => Promise<IAsyncResult>
+    signInWithFacebookAsync: () => Promise<any>
     getFacebookCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    deleteUserAfterReAuth: () => Promise<IAsyncResult>
+    deleteUserAfterReAuth: () => Promise<any>
 }
 
-/**
- * Interface of async function result.
- */
-export interface IAsyncResult {
-    complete: boolean
-}
 
 const AuthContext = createContext<AuthContextType>({} as AuthContextType)
 
@@ -70,14 +64,13 @@ export const AuthProvider = ({ children }) => {
             const result = await getGoogleLogInResult()
 
             if (result.type !== 'success') {
-                return { complete: false };
+                throw Error("signInWithGoogleAsync failed")
             }
 
-            const res = await signInFirebaseByGoogle(result)
-            if (res) return { complete: true };
+            await signInFirebaseByGoogle(result)
 
         } catch (e) {
-            return { complete: false };
+            throw Error("signInWithGoogleAsync failed")
         }
     }
 
@@ -107,7 +100,7 @@ export const AuthProvider = ({ children }) => {
             )
             return credential
         }
-        return null
+        throw Error("getGoogleCredential failed")
     }
 
 
@@ -156,7 +149,7 @@ export const AuthProvider = ({ children }) => {
             const res = await auth.signInWithCredential(credential)
             return res
         } catch (e) {
-            console.log('signInFirebaseByFacebook error: ', e.message)
+            throw Error("signInFirebaseByFacebook error")
         }
     }
 
@@ -211,10 +204,9 @@ export const AuthProvider = ({ children }) => {
             // 刪除該帳號的資料
             const userRef = db.ref(`/users/${currentUser.uid}`)
             await userRef.remove()
-            return { complete: true }
         } catch (e) {
             console.log(e.message)
-            return { complete: false }
+            throw Error("deleteUserAfterReAuth error")
         }
     }
 
@@ -229,7 +221,7 @@ export const AuthProvider = ({ children }) => {
                     email: user.providerData[0].email,
                     log_in_by: user.providerData[0].providerId,
                     profile_picture: user.photoURL,
-                    username: user.displayName,
+                    username: user.displayName.toString(),
                     create_at: user.metadata.creationTime,
                     last_log_in_at: user.metadata.lastSignInTime,
                 })

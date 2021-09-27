@@ -1,6 +1,6 @@
 import { IDBUserData } from './dbLibType';
 import { db } from "../../firebase";
-import { IAsyncResult } from '../hook/AuthContext';
+import { } from 'uuid'
 
 
 /**
@@ -10,25 +10,20 @@ import { IAsyncResult } from '../hook/AuthContext';
  * @param data The data to be written.
  */
 export const userWrite = (userId: string, data: IDBUserData) => {
-
     const userRef = db.ref(`/users/${userId}`)
     const entries = Object.entries(data)
     entries.forEach(([key, value]) => {
-        if (key === 'relation_to_be_confirmed') {
-            sendRequestToUser(userId, value)
-                .catch(e => console.log('userWrite error: ', e.message))
-        } else {
-            userRef.child(key).set(value)
-
-                .catch(e => console.log('userWrite error: ', e.message))
-        }
+        userRef.child(key).set(value)
+            .catch(e => console.log('userWrite error: ', e.message))
     })
-    console.log("userWrite done")
+    console.log("update user profile")
 }
 
-export const requestWrite = (userId: string, value: IDBRequest) => {
-    const requestRef = db.ref(`/requests/${userId}`)
-    requestRef.push().set(value)
+
+export const getUserProfile = async (userId: string, type: string) => {
+    const userRef = db.ref(`/users/${userId}`)
+    const data = await userRef.child(type).get()
+    return data.val()
 }
 
 
@@ -38,15 +33,31 @@ export const requestWrite = (userId: string, value: IDBRequest) => {
  * @param userId The user id of the partner who you want to make a relation.
  * @param myId The user id of the curren user
  */
-export const sendRequestToUser = async (userId: string, myId: string): Promise<IAsyncResult> => {
-    try {
-        // 取得對方的 request
-        const userRequestsRef = db.ref(`/relation_requests/${userId}/`)
-        await userRequestsRef.child(myId).set((new Date).toUTCString())
+export const sendRequestToUser = async (userId: string, myId: string): Promise<any> => {
+    if (userId === myId) throw Error('You can\'t send a request to your self')
+    const userRequestsRef = db.ref(`/relation_requests/${userId}/`)
+    await userRequestsRef.child(myId).set((new Date).toUTCString())
+}
 
-    } catch (e) {
-        console.log(e.message)
-        return { complete: false }
+
+export const checkUserRequest = async (userId: string): Promise<[string, string][]> => {
+
+    const requestList = (await db.ref(`/relation_requests/${userId}`).get()).val()
+    const entries: [string, string][] = Object.entries(requestList)
+
+    const requests = []
+    for (const entry of entries) {
+        const [fromId, UTC] = entry
+        const username = await getUserProfile(fromId, 'username')
+        console.log(username)
+        requests.push({ from: username, at: UTC })
     }
+    return requests
+}
+
+
+export const createRelation = (userId: string, myId: string) => {
+
+    const newRelationRef = db.ref(`/relations/$`)
 
 }

@@ -6,18 +6,18 @@ import { db } from '../../firebase'
 import { HomePageProp } from '../../types/types'
 import useNavigate from '../hook/useNavigate'
 import { IDBUserData, IUser } from '../lib/dbLibType'
-import { sendRequestToUser, userWrite } from '../lib/dbLib'
+import { checkUserRequest, getUserProfile, sendRequestToUser } from '../lib/dbLib'
+import RequestModal from '../components/RequestModal'
 
 
 
 const HomePage = () => {
     const { currentUser, logout, deleteUserAfterReAuth } = useAuth()
-
     const userRef = db.ref('/users/' + currentUser?.uid)
-
     const [emailToInvite, setEmailToInvite] = useState('');
     const [logInBy, setLogInBy] = useState('');
     const { oneWayNavigate } = useNavigate()
+    const [showRequestModal, setShowRequestModal] = useState(false);
 
     const onDeleteUser = async () => {
         try {
@@ -31,21 +31,23 @@ const HomePage = () => {
 
     // 寄送邀請 
     const onInvite = async () => {
-        // 查詢用戶
-        const partnerDataSnap = await db.ref(`/users/`).orderByChild('email').equalTo(emailToInvite).once('value')
-        if (!partnerDataSnap.exists()) return alert('用戶不存在')
-        // 將自己的uid寫入對方的 relation_to_be_confirmed
-        const partnerData = partnerDataSnap.val() // {"7xMF23...":{"email":"...", ...}}
+        try {
+            // 查詢用戶
+            const partnerDataSnap = await db.ref(`/users/`).orderByChild('email').equalTo(emailToInvite).once('value')
+            if (!partnerDataSnap.exists()) return alert('用戶不存在')
+            // 將自己的uid寫入對方的 relation_to_be_confirmed
+            const partnerData = partnerDataSnap.val() // {"7xMF23...":{"email":"...", ...}}
 
-        const partnerId = Object.keys(partnerData)[0]
-        sendRequestToUser(partnerId, currentUser.uid)
+            const partnerId = Object.keys(partnerData)[0]
+            await sendRequestToUser(partnerId, currentUser.uid)
+
+        } catch (e) {
+            alert(e.message)
+        }
 
     }
 
-
-    const onCheck = async () => {
-
-    }
+    const onCheck = () => setShowRequestModal(true)
 
 
     useEffect(() => {
@@ -77,7 +79,7 @@ const HomePage = () => {
         <View style={styles.container}>
             <Text style={styles.title}>Home page</Text>
             <Button title={"Log out"} onPress={onLogout} />
-            <Text>{currentUser?.email}</Text>
+            <Text>{currentUser?.providerData[0].email}</Text>
             <Text>Your login methed is {logInBy === 'password' ? 'email and password' : logInBy}</Text>
             <Button title={"delete"} onPress={onDeleteUser} />
 
@@ -88,6 +90,7 @@ const HomePage = () => {
             />
             <Button title={"invite"} onPress={onInvite} />
             <Button title="Check requests" onPress={onCheck} />
+            <RequestModal isVisible={showRequestModal} dismiss={() => { setShowRequestModal(false) }} />
         </View>
     )
 }
