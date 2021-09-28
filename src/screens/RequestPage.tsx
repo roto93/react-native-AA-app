@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
-import { addNewPartnerToList, addNewRelationToList, getUserRequestArray, createRelation } from '../lib/dbLib'
+import { addNewPartnerToList, addNewRelationToList, getUserRequestArray, acceptRelation } from '../lib/dbLib'
 import AppLoading from 'expo-app-loading'
+import { RowView } from '../components/RowView'
 
 const RequestPage = () => {
     const { currentUser } = useAuth()
@@ -78,26 +79,29 @@ type IRequestProps = {
 const RequestBox = ({ request }: IRequestProps) => {
     const { from, fromId, at } = request
     const { currentUser } = useAuth()
-    const onConfirm = async () => {
+    const onAccept = async () => {
         try {
-            const newRelationId = await createRelation(fromId, currentUser.uid)
-            await addNewPartnerToList(currentUser.uid, fromId)
-            await addNewRelationToList(currentUser.uid, fromId, newRelationId)
+            await acceptRelation(fromId, currentUser.uid)
         } catch (e) {
             alert(e.message)
         }
+    }
+    const onReject = async () => {
+
     }
 
     return (
         <View style={styles.requestContainer}>
             <Text>{from}</Text>
-            <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={onConfirm}
-            >
-                <Text>確認</Text>
-            </TouchableOpacity>
-        </View>
+            <RowView style={{ width: 120, justifyContent: 'space-between' }}>
+                <TouchableOpacity style={styles.confirmButton} onPress={onAccept}>
+                    <Text>確認</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.confirmButton} onPress={onReject}>
+                    <Text>刪除</Text>
+                </TouchableOpacity>
+            </RowView>
+        </View >
     )
 }
 

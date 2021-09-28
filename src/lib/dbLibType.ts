@@ -43,9 +43,10 @@ export interface IDBUserDataProps {
  */
 export interface IDBRelationProps {
     relation_id?: string
-    creater_uid?: string,
-    partner_uid?: string,
-    spendings_to_be_confirmed?: IDBSpending[]
+    creater?: IUser,
+    partner?: IUser,
+    unconfirmed_spendings?: IDBSpending
+    spendings?: IDBSpending
 }
 
 
