@@ -7,16 +7,11 @@ import { db } from "../../firebase";
  * ### Update an user's data.
  * 
  * @param userId The user id which is going to be used to write data.
- * @param data The data to be written.
+ * @param data The data object to be written.
  */
 export const userWrite = (userId: string, data: IDBUserDataProps) => {
     const userRef = db.ref(`/users/${userId}`)
-    const entries = Object.entries(data)
-    entries.forEach(([key, value]) => {
-        userRef.child(key).set(value)
-            .catch(e => console.log('userWrite error: ', e.message))
-    })
-    console.log("update user profile")
+    userRef.update(data)
 }
 
 
@@ -26,17 +21,6 @@ export const getUserProfile = async (userId: string, type: string) => {
     return data.val()
 }
 
-export const deleteUserProfile = async (userId: string) => {
-    const userRef = db.ref(`/users/${userId}`)
-    const partnerList: object = (await userRef.child(`partner_list`).get()).val()
-    if (partnerList) {
-        const partners = Object.keys(partnerList)
-        for (let partner of partners) {
-            await db.ref(`/users/${partner}/partner_list/${userId}/user_exists`).set(false)
-        }
-    }
-    await userRef.remove()
-}
 
 /**
  * ### Send a request to make a relation. waiting for partner to confirm.
@@ -89,6 +73,9 @@ export const deleteRelationRequest = async (createrId: string, partnerId: string
         .remove()
 }
 
+
+
+// TODO
 /**
  * ### 雙方互相寫入 partner_list
  * 
@@ -98,6 +85,7 @@ export const deleteRelationRequest = async (createrId: string, partnerId: string
 export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
     const user1Ref = db.ref(`/users/${user1Id}`)
     const user2Ref = db.ref(`/users/${user2Id}`)
+
     const user1Data: IDBUserDataProps = (await db.ref(`/users/${user1Id}`).get()).val()
     const user2Data: IDBUserDataProps = (await db.ref(`/users/${user2Id}`).get()).val()
 
@@ -117,13 +105,13 @@ export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
     user2Ref.child(`partner_list/${user1Id}`).set(user1)
 }
 
+// TODO
 export const addNewRelationToList = async (user1Id: string, user2Id: string, relationId: string) => {
     const ref1 = db.ref(`/users/${user1Id}/relations/${relationId}`)
     const ref2 = db.ref(`/users/${user2Id}/relations/${relationId}`)
 
     ref1.set(true)
     ref2.set(true)
-
 
 }
 
@@ -149,3 +137,23 @@ export const checkIsAlreadyPartner = async (user1Id: string, user2Id: string) =>
     console.log(userPartners)
     return userPartners.includes(user2Id)
 }
+
+
+
+
+
+
+
+
+
+// export const deleteUserProfile = async (userId: string) => {
+//     const userRef = db.ref(`/users/${userId}`)
+//     const partnerList: object = (await userRef.child(`partner_list`).get()).val()
+//     if (partnerList) {
+//         const partners = Object.keys(partnerList)
+//         for (let partner of partners) {
+//             await db.ref(`/users/${partner}/partner_list/${userId}/user_exists`).set(false)
+//         }
+//     }
+//     await userRef.remove()
+// }

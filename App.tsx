@@ -7,7 +7,6 @@ import { NavigationContainer } from '@react-navigation/native'
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import HomePage from './src/screens/HomePage';
 import LogInPage from './src/screens/LogInPage';
-import SignUpPage from './src/screens/SignUpPage';
 import { RootStackParamList } from './types/types'
 import Toast from './src/components/Toast';
 import { StoreContext, useMappedState, useDispatch } from 'redux-react-hook'
@@ -30,7 +29,6 @@ const AppNavigation: React.FC = () => {
       <Stack.Navigator>
         <Stack.Screen name={"LogIn"} component={LogInPage} options={{ headerShown: false }} />
         <Stack.Screen name={"Home"} component={HomePage} />
-        <Stack.Screen name={"SignUp"} component={SignUpPage} />
         <Stack.Screen name={"Request"} component={RequestPage} />
 
       </Stack.Navigator>

@@ -13,7 +13,7 @@ import * as Action from '../redux/action'
 
 
 const HomePage = () => {
-    const { currentUser, logout, deleteUserAfterReAuth } = useAuth()
+    const { currentUser, logout } = useAuth()
     const userRef = db.ref('/users/' + currentUser?.uid)
     const [emailToInvite, setEmailToInvite] = useState('');
     const [logInBy, setLogInBy] = useState('');
@@ -22,14 +22,6 @@ const HomePage = () => {
     const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
     const dispatch = useDispatch()
 
-    const onDeleteUser = async () => {
-        try {
-            await deleteUserAfterReAuth()
-            oneWayNavigate('LogIn')
-        } catch (e) {
-            console.log(e.message)
-        }
-    }
 
     // 寄送邀請 
     const onInvite = async () => {
@@ -88,7 +80,6 @@ const HomePage = () => {
             <Button title={"Log out"} onPress={onLogout} />
             <Text>{currentUser?.providerData[0].email}</Text>
             <Text>Your login methed is {logInBy === 'password' ? 'email and password' : logInBy}</Text>
-            <Button title={"delete"} onPress={onDeleteUser} />
 
             <TextInput
                 value={emailToInvite}

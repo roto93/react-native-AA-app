@@ -3,19 +3,16 @@ import firebase from 'firebase'
 import { auth, db } from '../../firebase'
 import * as Google from 'expo-google-app-auth';
 import * as Facebook from 'expo-facebook'
-import { deleteUserProfile, userWrite } from '../lib/dbLib';
+import { userWrite } from '../lib/dbLib';
 import { googleLoginAndroidClientId, facebookLoginAppId } from '@env'
 
 interface AuthContextType {
     currentUser: firebase.User | null,
-    logInWithEmail: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     logout: () => any
-    emailSignup: (email: string, password: string) => Promise<firebase.auth.UserCredential>
     signInWithGoogleAsync: () => Promise<any>
     getGoogleCredential: () => Promise<firebase.auth.OAuthCredential> | null
     signInWithFacebookAsync: () => Promise<any>
     getFacebookCredential: () => Promise<firebase.auth.OAuthCredential> | null
-    deleteUserAfterReAuth: () => Promise<any>
 }
 
 
@@ -44,18 +41,9 @@ export const AuthProvider = ({ children }) => {
     // 用戶 object
     const [currentUser, setCurrentUser] = useState<firebase.User | null>(null);
 
-    // email 登入
-    const logInWithEmail = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
-        auth.signInWithEmailAndPassword(email, pwd)
-    )
 
     // 登出
     const logout = () => auth.signOut()
-
-    // email 註冊
-    const emailSignup = (email: string, pwd: string): Promise<firebase.auth.UserCredential> => (
-        auth.createUserWithEmailAndPassword(email, pwd)
-    )
 
 
     // Google 登入 
@@ -113,7 +101,7 @@ export const AuthProvider = ({ children }) => {
     async function signInWithFacebookAsync() {
         await initialezeFacebook()
 
-        //{type,token,expirationDate,permissions,declinedPermissions,}
+        // {type,token,expirationDate,permissions,declinedPermissions,}
         const result = await Facebook.logInWithReadPermissionsAsync({
             permissions: ['public_profile', 'email'],   // 還有其他 permission
         });
@@ -157,64 +145,33 @@ export const AuthProvider = ({ children }) => {
     }
 
 
-    // 刪除用戶 (內含re-auth) 
-    const deleteUserAfterReAuth = async () => {
-        // 先取得憑證
-        let credential
-
-        switch (currentUser.providerData[0].providerId) {
-            case 'google.com':
-                credential = await getGoogleCredential()
-                break
-            case 'facebook.com':
-                credential = await getFacebookCredential()
-                break
-            default:
-                return null
-        }
-
-        // 用憑證 re-auth
-        await currentUser.reauthenticateWithCredential(credential)
-
-        // 刪除該帳號的資料
-        await deleteUserProfile(currentUser.uid)
-
-        // 刪除帳號
-        await currentUser.delete()
-
-    }
 
     // 監聽登入狀態
     useEffect(() => {
         const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
-            if (user) {
-                console.log('log in with', user.email)
-                userWrite(user.uid, {
-                    uid: user.uid,
-                    email: user.providerData[0].email,
-                    log_in_by: user.providerData[0].providerId,
-                    profile_picture: user.photoURL,
-                    username: user.displayName.toString(),
-                    create_at: user.metadata.creationTime,
-                    last_log_in_at: user.metadata.lastSignInTime,
-                })
-            } else {
-                console.log('Not log in')
-            }
+            if (!user) return console.log("Not log in")
+
+            console.log('log in with', user.email)
+            userWrite(user.uid, {
+                uid: user.uid,
+                email: user.providerData[0].email,
+                log_in_by: user.providerData[0].providerId,
+                profile_picture: user.photoURL,
+                username: user.displayName.toString(),
+                create_at: user.metadata.creationTime,
+                last_log_in_at: user.metadata.lastSignInTime,
+            })
         })
         return unsubscribe
     }, [])
 
 
     const value: AuthContextType = {
-        logInWithEmail,
         logout,
-        emailSignup,
         currentUser,
         signInWithGoogleAsync,
         getGoogleCredential,
-        deleteUserAfterReAuth,
         signInWithFacebookAsync,
         getFacebookCredential
     }
@@ -226,3 +183,43 @@ export const AuthProvider = ({ children }) => {
         </AuthContext.Provider>
     )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// 刪除用戶 (內含re-auth) 
+// const deleteUserAfterReAuth = async () => {
+//     // 先取得憑證
+//     let credential
+
+//     switch (currentUser.providerData[0].providerId) {
+//         case 'google.com':
+//             credential = await getGoogleCredential()
+//             break
+//         case 'facebook.com':
+//             credential = await getFacebookCredential()
+//             break
+//         default:
+//             return null
+//     }
+
+//     // 用憑證 re-auth
+//     await currentUser.reauthenticateWithCredential(credential)
+
+//     // 刪除該帳號的資料
+//     await deleteUserProfile(currentUser.uid)
+
+//     // 刪除帳號
+//     await currentUser.delete()
+
+// }
