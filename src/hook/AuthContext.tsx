@@ -3,7 +3,7 @@ import firebase from 'firebase'
 import { auth, db } from '../../firebase'
 import * as Google from 'expo-google-app-auth';
 import * as Facebook from 'expo-facebook'
-import { userWrite } from '../lib/dbLib';
+import { deleteUserProfile, userWrite } from '../lib/dbLib';
 import { googleLoginAndroidClientId, facebookLoginAppId } from '@env'
 
 interface AuthContextType {
@@ -176,12 +176,12 @@ export const AuthProvider = ({ children }) => {
         // 用憑證 re-auth
         await currentUser.reauthenticateWithCredential(credential)
 
+        // 刪除該帳號的資料
+        await deleteUserProfile(currentUser.uid)
+
         // 刪除帳號
         await currentUser.delete()
 
-        // 刪除該帳號的資料
-        const userRef = db.ref(`/users/${currentUser.uid}`)
-        await userRef.remove()
     }
 
     // 監聽登入狀態

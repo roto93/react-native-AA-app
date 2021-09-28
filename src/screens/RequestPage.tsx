@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
-import { addNewPartnerToList, addNewRelationToList, checkUserRequest, createRelation } from '../lib/dbLib'
+import { addNewPartnerToList, addNewRelationToList, getUserRequestArray, createRelation } from '../lib/dbLib'
 import AppLoading from 'expo-app-loading'
 
 const RequestPage = () => {
@@ -14,10 +14,9 @@ const RequestPage = () => {
         const userRequestRef = db.ref(`/relation_requests/${currentUser.uid}`)
         userRequestRef.on('value', (snap) => {
             console.log('data changed')
-            checkUserRequest(currentUser.uid)
+            getUserRequestArray(currentUser.uid)
                 .then(requests => {
                     setRequestArray(requests)
-                    console.log(requests)
                 })
                 .then(() => { setIsFetching(false) })
         })

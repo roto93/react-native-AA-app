@@ -24,11 +24,10 @@ const HomePage = () => {
 
     const onDeleteUser = async () => {
         try {
-            const { complete } = await deleteUserAfterReAuth()
-            if (complete) oneWayNavigate('LogIn')
+            await deleteUserAfterReAuth()
+            oneWayNavigate('LogIn')
         } catch (e) {
             console.log(e.message)
-            console.log(e.code)
         }
     }
 
@@ -65,7 +64,6 @@ const HomePage = () => {
         userRef.on('value', (snap) => {
             const data: IDBUserDataProps = snap.val()
             setLogInBy(data?.log_in_by)
-
         })
 
         return () => { userRef.off() }
@@ -78,7 +76,7 @@ const HomePage = () => {
             const data: IDBUserDataProps = (await userRef.get()).val()
             setLogInBy(data?.log_in_by)
         }
-        getUserDataOnceAsync().catch(e => console.log(e.message))
+        getUserDataOnceAsync().catch(e => alert(e.message))
     }, [currentUser])
 
     const onLogout = async (): Promise<void> => {
@@ -87,7 +85,6 @@ const HomePage = () => {
     }
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Home page</Text>
             <Button title={"Log out"} onPress={onLogout} />
             <Text>{currentUser?.providerData[0].email}</Text>
             <Text>Your login methed is {logInBy === 'password' ? 'email and password' : logInBy}</Text>

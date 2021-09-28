@@ -26,6 +26,17 @@ export const getUserProfile = async (userId: string, type: string) => {
     return data.val()
 }
 
+export const deleteUserProfile = async (userId: string) => {
+    const userRef = db.ref(`/users/${userId}`)
+    const partnerList: object = (await userRef.child(`partner_list`).get()).val()
+    if (partnerList) {
+        const partners = Object.keys(partnerList)
+        for (let partner of partners) {
+            await db.ref(`/users/${partner}/partner_list/${userId}/user_exists`).set(false)
+        }
+    }
+    await userRef.remove()
+}
 
 /**
  * ### Send a request to make a relation. waiting for partner to confirm.
@@ -40,7 +51,7 @@ export const sendRequestToUser = async (userId: string, myId: string): Promise<a
 }
 
 
-export const checkUserRequest = async (userId: string): Promise<[string, string][]> => {
+export const getUserRequestArray = async (userId: string): Promise<[string, string][]> => {
 
     const requestList = (await db.ref(`/relation_requests/${userId}`).get()).val()
     if (!requestList) return []
@@ -94,11 +105,13 @@ export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
         id: user1Data.uid,
         email: user1Data.email,
         username: user1Data.username,
+        user_exists: true
     }
     const user2 = {
         id: user2Id,
         email: user2Data.email,
         username: user2Data.username,
+        user_exists: true
     }
     user1Ref.child(`partner_list/${user2Id}`).set(user2)
     user2Ref.child(`partner_list/${user1Id}`).set(user1)

@@ -28,7 +28,7 @@ const AppNavigation: React.FC = () => {
   return (
     <NavigationContainer >
       <Stack.Navigator>
-        <Stack.Screen name={"LogIn"} component={LogInPage} />
+        <Stack.Screen name={"LogIn"} component={LogInPage} options={{ headerShown: false }} />
         <Stack.Screen name={"Home"} component={HomePage} />
         <Stack.Screen name={"SignUp"} component={SignUpPage} />
         <Stack.Screen name={"Request"} component={RequestPage} />
