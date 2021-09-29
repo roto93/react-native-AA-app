@@ -33,10 +33,10 @@ const HomePage = () => {
             // 將自己的uid寫入對方的 relation_to_be_confirmed
             const partnerData = partnerDataSnap.val() // {"7xMF23...":{"email":"...", ...}}
 
-            const partnerId = Object.keys(partnerData)[0]
-            const isAlreadyPartner = await checkIsAlreadyPartner(currentUser.uid, partnerId)
+            const partnerID = Object.keys(partnerData)[0]
+            const isAlreadyPartner = await checkIsAlreadyPartner(currentUser.uid, partnerID)
             if (isAlreadyPartner) throw Error("你們已經是朋友囉! 不能再邀請一次了")
-            await sendRequestToUser(partnerId, currentUser.uid)
+            await sendRequestToUser(partnerID, currentUser.uid)
             setEmailToInvite('')
             setShowToast(true, { text: "已送出邀請" })
         } catch (e) {
@@ -51,16 +51,11 @@ const HomePage = () => {
 
 
     useEffect(() => {
-        const unsubscribe = async () => {
+        const fetchAndUpdateUserData = async () => {
             if (!currentUser) return
             try {
-
-                const getUserDataOnceAsync = async () => {
-                    const data: IDBUserDataProps = (await userRef.get()).val()
-                    return data
-                }
-
-                const data = await getUserDataOnceAsync()
+                const data: IDBUserDataProps = (await userRef.get()).val()
+                setLogInBy(data.log_in_by)
                 if (!data) {
                     await userUpdate(currentUser.uid, {
                         uid: currentUser.uid,
@@ -78,7 +73,8 @@ const HomePage = () => {
                 }
             } catch (e) { console.log(e.message, e.code) }
         }
-        return unsubscribe
+        fetchAndUpdateUserData()
+
     }, [currentUser])
 
     const onLogout = async (): Promise<void> => {

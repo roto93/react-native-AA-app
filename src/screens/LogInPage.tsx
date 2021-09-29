@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
-import { StyleSheet, Text, TouchableOpacity, View, Dimensions, ActivityIndicator } from 'react-native'
+import { StyleSheet, Text, View, ActivityIndicator } from 'react-native'
 import { useAuth } from '../hook/AuthContext'
 import { useDispatch } from 'redux-react-hook'
 import * as Action from '../redux/action'
 import useNavigate from '../hook/useNavigate'
+import AALoginButton from '../components/buttons/AALoginButton'
 
-const winY: number = Dimensions.get('window').height
 
 const LogInPage = () => {
     const { signInWithGoogleAsync, currentUser, signInWithFacebookAsync } = useAuth()
@@ -59,15 +59,8 @@ const LogInPage = () => {
     return (
         <View style={styles.container} >
             <Text style={styles.title}>Welcome!</Text>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { }} >
-                <Text>Email 登入</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { onSignIn("Google") }} >
-                <Text>Google 登入</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.loginButton} onPress={() => { onSignIn("Facebook") }} >
-                <Text>Facebook 登入</Text>
-            </TouchableOpacity>
+            <AALoginButton text={"Google 登入"} onPress={() => { onSignIn("Google") }} />
+            <AALoginButton text={"Facebook 登入"} onPress={() => { onSignIn("Facebook") }} />
         </View>
     )
 }
@@ -92,15 +85,4 @@ const styles = StyleSheet.create({
         fontWeight: 'bold',
         marginTop: 80
     },
-
-    loginButton: {
-        width: 194,
-        height: 48,
-        borderWidth: 1,
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 20
-    },
-
 })

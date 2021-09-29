@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity as TO, } from 'react-native'
 import { db } from '../../firebase';
 import AAInputBox from '../components/AAInputBox'
+import AALoginButton from '../components/buttons/AALoginButton';
 import { useAuth } from '../hook/AuthContext';
 import { userUpdate } from '../lib/dbLib';
 import { IDBUserDataProps } from '../lib/dbLibType';
@@ -20,10 +21,14 @@ const UpdateProfilePage = () => {
 
 
     useEffect(() => {
-        db.ref(`/users/${currentUser.uid}`).on('value', (snap) => {
+        const userRef = db.ref(`/users/${currentUser.uid}`)
+        userRef.on('value', (snap) => {
             const data: IDBUserDataProps = snap.val()
             setNewUsername(data.username)
         })
+        return () => {
+            userRef.off('value')
+        }
     }, [])
 
     return (
@@ -35,9 +40,7 @@ const UpdateProfilePage = () => {
                 onChangeText={(text) => { setNewUsername(text) }}
             />
 
-            <TO onPress={onSave}>
-                <Text>確定</Text>
-            </TO>
+            <AALoginButton onPress={onSave} text={"確定"} />
 
         </View>
     )
@@ -51,5 +54,6 @@ const styles = StyleSheet.create({
         width: '100%',
         justifyContent: 'flex-start',
         alignItems: 'center',
+        paddingTop: 20
     }
 })
