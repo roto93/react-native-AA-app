@@ -55,7 +55,7 @@ const HomePage = () => {
             if (!currentUser) return
             try {
                 const data: IDBUserDataProps = (await userRef.get()).val()
-                setLogInBy(data.log_in_by)
+                setLogInBy(currentUser.providerData[0].providerId)
                 if (!data) {
                     await userUpdate(currentUser.uid, {
                         uid: currentUser.uid,
