@@ -13,6 +13,7 @@ import { StoreContext, useMappedState, useDispatch } from 'redux-react-hook'
 import * as Action from './src/redux/action'
 import store from './src/redux/store'
 import RequestPage from './src/screens/RequestPage';
+import EditProfilePage from './src/screens/EditProfilePage';
 
 LogBox.ignoreLogs(['Setting a timer for a long'])
 
@@ -27,9 +28,11 @@ const AppNavigation: React.FC = () => {
   return (
     <NavigationContainer >
       <Stack.Navigator>
-        <Stack.Screen name={"LogIn"} component={LogInPage} options={{ headerShown: false }} />
-        <Stack.Screen name={"Home"} component={HomePage} />
-        <Stack.Screen name={"Request"} component={RequestPage} />
+        <Stack.Screen name={"登入"} component={LogInPage} options={{ headerShown: false }} />
+        <Stack.Screen name={"首頁"} component={HomePage} />
+        <Stack.Screen name={"你的邀請"} component={RequestPage} />
+        <Stack.Screen name={"更改個人資料"} component={EditProfilePage} />
+
 
       </Stack.Navigator>
       <Toast isVisible={showToast} setIsVisible={setShowToast} options={showToastOptions} />

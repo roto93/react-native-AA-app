@@ -5,7 +5,7 @@ import { useAuth } from '../hook/AuthContext'
 import { db } from '../../firebase'
 import useNavigate from '../hook/useNavigate'
 import { IDBUserDataProps } from '../lib/dbLibType'
-import { checkIsAlreadyPartner, sendRequestToUser } from '../lib/dbLib'
+import { checkIsAlreadyPartner, sendRequestToUser, userUpdate } from '../lib/dbLib'
 import RequestModal from './RequestPage'
 import { useDispatch } from 'redux-react-hook'
 import * as Action from '../redux/action'
@@ -21,7 +21,6 @@ const HomePage = () => {
     const [showRequestModal, setShowRequestModal] = useState(false);
     const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
     const dispatch = useDispatch()
-    console.log(currentUser?.metadata?.lastSignInTime)
 
     // 寄送邀請 
     const onInvite = async () => {
@@ -47,22 +46,48 @@ const HomePage = () => {
     }
 
     const onCheck = () => {
-        navigate("Request")
+        navigate("你的邀請")
     }
 
 
     useEffect(() => {
-        if (!currentUser) return
-        const getUserDataOnceAsync = async () => {
-            const data: IDBUserDataProps = (await userRef.get()).val()
-            setLogInBy(data?.log_in_by)
+        const unsubscribe = async () => {
+            if (!currentUser) return
+            try {
+
+                const getUserDataOnceAsync = async () => {
+                    const data: IDBUserDataProps = (await userRef.get()).val()
+                    return data
+                }
+
+                const data = await getUserDataOnceAsync()
+                if (!data) {
+                    await userUpdate(currentUser.uid, {
+                        uid: currentUser.uid,
+                        email: currentUser.providerData[0].email,
+                        log_in_by: currentUser.providerData[0].providerId,
+                        profile_picture: currentUser.photoURL,
+                        username: currentUser.displayName.toString(),
+                        create_at: currentUser.metadata.creationTime,
+                        last_log_in_at: currentUser.metadata.lastSignInTime,
+                    })
+                } else {
+                    await userUpdate(currentUser.uid, {
+                        last_log_in_at: currentUser.metadata.lastSignInTime,
+                    })
+                }
+            } catch (e) { console.log(e.message, e.code) }
         }
-        getUserDataOnceAsync().catch(e => alert(e.message))
+        return unsubscribe
     }, [currentUser])
 
     const onLogout = async (): Promise<void> => {
-        await logout()
-        oneWayNavigate('LogIn')
+        try {
+            await logout()
+            oneWayNavigate('登入')
+        } catch (e) {
+            console.log(e.message, e.code)
+        }
     }
     return (
         <View style={styles.container}>
@@ -75,9 +100,12 @@ const HomePage = () => {
                 onChangeText={(text) => { setEmailToInvite(text) }}
                 style={styles.textInput}
             />
-            <Button title={"invite"} onPress={onInvite} />
-            <Button title="Check requests" onPress={onCheck} />
-            <Button title="test" onPress={() => { }} />
+            <View style={{ height: 400, justifyContent: 'space-evenly' }}>
+                <Button title={"invite"} onPress={onInvite} />
+                <Button title="Check requests" onPress={onCheck} />
+                <Button title="edit profile" onPress={() => { navigate("更改個人資料") }} />
+                <Button title="test" onPress={() => { }} />
+            </View>
         </View>
     )
 }

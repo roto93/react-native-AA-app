@@ -36,7 +36,7 @@ const LogInPage = () => {
         if (autoEndLoading) {
             const isLoadingTimeoutID = setTimeout(() => {
                 if (isLoading && autoEndLoading) setIsLoading(false)
-            }, 1500);
+            }, 1000);
             setTimeoutID(isLoadingTimeoutID)
         }
 
@@ -46,7 +46,7 @@ const LogInPage = () => {
         if (currentUser) {
             clearTimeout(timeoutID)
             setAutoEndLoading(false)
-            oneWayNavigate("Home")
+            oneWayNavigate("首頁")
         }
     }, [currentUser])
 

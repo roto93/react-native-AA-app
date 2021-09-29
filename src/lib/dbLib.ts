@@ -35,7 +35,6 @@ export const userUpdate = async (userId: string, data: IDBUserDataProps) => {
         ...userRelationsUpdateObj
     }
 
-    console.log(updateObj)
     db.ref().update(updateObj)
 }
 
@@ -68,10 +67,8 @@ export const getUserRequestArray = async (userId: string): Promise<[string, stri
 
     const requestList = (await db.ref(`/relation_requests/${userId}`).get()).val()
     if (!requestList) return []
-    console.log(requestList)
     const requests = []
     const entries: entry[] = Object.entries(requestList)
-    console.log(entries)
     entries.forEach(([idKey, val]: entry) => {
         const newItem = {
             at: val.at,
@@ -96,7 +93,6 @@ export const acceptRelation = async (createrId: string, partnerId: string) => {
     const obj3 = await addNewRelationToList(createrId, partnerId, newRelationKey)
 
     const updateObj = { ...obj1, ...obj2, ...obj3 }
-    // console.log(updateObj)
     db.ref().update(updateObj)
 }
 
@@ -220,7 +216,6 @@ export const checkIsAlreadyPartner = async (user1Id: string, user2Id: string) =>
     const userPartnerList = (await db.ref(`/users/${user1Id}/partner_list/`).get()).val()
     if (!userPartnerList) return false
     const userPartners = Object.keys(userPartnerList)
-    console.log(userPartners)
     return userPartners.includes(user2Id)
 }
 

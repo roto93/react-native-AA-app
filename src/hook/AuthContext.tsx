@@ -109,7 +109,7 @@ export const AuthProvider = ({ children }) => {
             // 利用 FB 提供的圖形API fetch 用戶名
             // const response = await fetch(`https://graph.facebook.com/me?access_token=${result.token}`);
             await signInFirebaseByFacebook(result.token)
-        } throw new Error("signInFirebaseByFacebook failed");
+        } else throw new Error("signInFirebaseByFacebook failed");
     }
 
 
@@ -117,6 +117,7 @@ export const AuthProvider = ({ children }) => {
     const signInFirebaseByFacebook = async (token: string) => {
         const credential = firebase.auth.FacebookAuthProvider.credential(token)
         const res = await auth.signInWithCredential(credential)
+        console.log(res)
         return res
     }
 
@@ -148,20 +149,10 @@ export const AuthProvider = ({ children }) => {
 
     // 監聽登入狀態
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged(async (user) => {
+        const unsubscribe = auth.onAuthStateChanged((user) => {
             setCurrentUser(user)
             if (!user) return console.log("Not log in")
-
-            console.log('log in with', user.email)
-            await userUpdate(user.uid, {
-                uid: user.uid,
-                email: user.providerData[0].email,
-                log_in_by: user.providerData[0].providerId,
-                profile_picture: user.photoURL,
-                username: user.displayName.toString(),
-                create_at: user.metadata.creationTime,
-                last_log_in_at: user.metadata.lastSignInTime,
-            })
+            console.log('log in with', user.providerData[0].email)
         })
         return unsubscribe
     }, [])
