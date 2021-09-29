@@ -3,7 +3,7 @@ import firebase from 'firebase'
 import { auth, db } from '../../firebase'
 import * as Google from 'expo-google-app-auth';
 import * as Facebook from 'expo-facebook'
-import { userWrite } from '../lib/dbLib';
+import { userUpdate } from '../lib/dbLib';
 import { googleLoginAndroidClientId, facebookLoginAppId } from '@env'
 
 interface AuthContextType {
@@ -148,12 +148,12 @@ export const AuthProvider = ({ children }) => {
 
     // 監聽登入狀態
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
+        const unsubscribe = auth.onAuthStateChanged(async (user) => {
             setCurrentUser(user)
             if (!user) return console.log("Not log in")
 
             console.log('log in with', user.email)
-            userWrite(user.uid, {
+            await userUpdate(user.uid, {
                 uid: user.uid,
                 email: user.providerData[0].email,
                 log_in_by: user.providerData[0].providerId,

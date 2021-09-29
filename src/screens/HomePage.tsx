@@ -21,7 +21,7 @@ const HomePage = () => {
     const [showRequestModal, setShowRequestModal] = useState(false);
     const setShowToast = (bool, options) => dispatch(Action.setShowToast(bool, options))
     const dispatch = useDispatch()
-
+    console.log(currentUser?.metadata?.lastSignInTime)
 
     // 寄送邀請 
     const onInvite = async () => {
@@ -49,17 +49,6 @@ const HomePage = () => {
     const onCheck = () => {
         navigate("Request")
     }
-
-
-    useEffect(() => {
-        console.log('run useEffect')
-        userRef.on('value', (snap) => {
-            const data: IDBUserDataProps = snap.val()
-            setLogInBy(data?.log_in_by)
-        })
-
-        return () => { userRef.off() }
-    }, [])
 
 
     useEffect(() => {

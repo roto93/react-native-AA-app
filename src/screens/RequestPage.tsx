@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from 'react-native'
 import { db } from '../../firebase'
 import { useAuth } from '../hook/AuthContext'
-import { addNewPartnerToList, addNewRelationToList, getUserRequestArray, acceptRelation } from '../lib/dbLib'
-import AppLoading from 'expo-app-loading'
+import { getUserRequestArray, acceptRelation } from '../lib/dbLib'
 import { RowView } from '../components/RowView'
+import { IRelationRequest, IRequestsProps } from '../lib/dbLibType'
 
 const RequestPage = () => {
     const { currentUser } = useAuth()
@@ -14,7 +14,6 @@ const RequestPage = () => {
     useEffect(() => {
         const userRequestRef = db.ref(`/relation_requests/${currentUser.uid}`)
         userRequestRef.on('value', (snap) => {
-            console.log('data changed')
             getUserRequestArray(currentUser.uid)
                 .then(requests => {
                     setRequestArray(requests)
@@ -68,20 +67,14 @@ const styles = StyleSheet.create({
     }
 })
 
-type IRequestProps = {
-    request: {
-        from: string,
-        fromId: string,
-        at: string,
-    }
-}
 
-const RequestBox = ({ request }: IRequestProps) => {
-    const { from, fromId, at } = request
+
+const RequestBox = ({ request }: { request: IRequestsProps }) => {
+    const { username, id, at } = request
     const { currentUser } = useAuth()
     const onAccept = async () => {
         try {
-            await acceptRelation(fromId, currentUser.uid)
+            await acceptRelation(id, currentUser.uid)
         } catch (e) {
             alert(e.message)
         }
@@ -92,7 +85,7 @@ const RequestBox = ({ request }: IRequestProps) => {
 
     return (
         <View style={styles.requestContainer}>
-            <Text>{from}</Text>
+            <Text>{username}</Text>
             <RowView style={{ width: 120, justifyContent: 'space-between' }}>
                 <TouchableOpacity style={styles.confirmButton} onPress={onAccept}>
                     <Text>確認</Text>

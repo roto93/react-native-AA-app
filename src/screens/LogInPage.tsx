@@ -35,7 +35,7 @@ const LogInPage = () => {
     useEffect(() => {
         if (autoEndLoading) {
             const isLoadingTimeoutID = setTimeout(() => {
-                if (isLoading && autoEndLoading) console.log('setTimeout'); setIsLoading(false)
+                if (isLoading && autoEndLoading) setIsLoading(false)
             }, 1500);
             setTimeoutID(isLoadingTimeoutID)
         }

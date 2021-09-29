@@ -1,4 +1,4 @@
-import { IDBUserDataProps, IDBRelationProps, IpartnerProps } from './dbLibType';
+import { IDBUserDataProps, IDBRelationProps, IpartnerProps, IRelationRequest, IRequestEntries } from './dbLibType';
 import { db } from "../../firebase";
 import firebase from 'firebase'
 
@@ -8,9 +8,35 @@ import firebase from 'firebase'
  * @param userId The user id which is going to be used to write data.
  * @param data The data object to be written.
  */
-export const userWrite = (userId: string, data: IDBUserDataProps) => {
+export const userUpdate = async (userId: string, data: IDBUserDataProps) => {
     const userRef = db.ref(`/users/${userId}`)
-    userRef.update(data)
+
+    const dataEntries = Object.entries(data)
+    let updateObj = {}
+    dataEntries.forEach(([key, val]) => {
+        updateObj[getfullKey(userRef) + `/${key}`] = val
+    })
+
+    // lookup
+    const userRelations = (await db.ref(`/user_relations/${userId}`).once('value')).val()
+    const userRelationsUpdateObj = {}
+    if (userRelations) {
+        const suerRelationsEntries = Object.entries(userRelations)
+        suerRelationsEntries.forEach(async ([relationKey, relationRole]) => {
+            dataEntries.forEach(([dataKey, dataVal]) => {
+                userRelationsUpdateObj[`/relations/${relationKey}/${relationRole}/${dataKey}`] = dataVal
+                // userRelationsUpdateObj[`/relations/${key}/partner/${dataKey}`] = dataVal
+            })
+        })
+    }
+
+    updateObj = {
+        ...updateObj,
+        ...userRelationsUpdateObj
+    }
+
+    console.log(updateObj)
+    db.ref().update(updateObj)
 }
 
 
@@ -30,23 +56,33 @@ export const getUserProfile = async (userId: string, type: string) => {
 export const sendRequestToUser = async (userId: string, myId: string): Promise<any> => {
     if (userId === myId) throw Error('You can\'t send a request to your self')
     const userRequestsRef = db.ref(`/relation_requests/${userId}/`)
-    await userRequestsRef.child(myId).set((new Date).toUTCString())
+    const updateObj = {}
+    const myUserObj = (await db.ref(`/users/${myId}`).once('value')).val()
+    updateObj[getfullKey(userRequestsRef) + `/${myId}` + `/from`] = myUserObj
+    updateObj[getfullKey(userRequestsRef) + `/${myId}` + `/at`] = (new Date()).toUTCString()
+    await db.ref().update(updateObj)
 }
 
-
+type entry = [string, IRelationRequest]
 export const getUserRequestArray = async (userId: string): Promise<[string, string][]> => {
 
     const requestList = (await db.ref(`/relation_requests/${userId}`).get()).val()
     if (!requestList) return []
-    const entries: [string, string][] = Object.entries(requestList)
-
+    console.log(requestList)
     const requests = []
-    for (const entry of entries) {
-        const [fromId, UTC] = entry
-        const username = await getUserProfile(fromId, 'username')
-        console.log(username)
-        requests.push({ from: username, fromId: fromId, at: UTC })
-    }
+    const entries: entry[] = Object.entries(requestList)
+    console.log(entries)
+    entries.forEach(([idKey, val]: entry) => {
+        const newItem = {
+            at: val.at,
+            username: val.from.username,
+            id: val.from.uid
+        }
+        requests.push(newItem)
+    })
+
+
+    //{username,id,at}[]
     return requests
 }
 
@@ -93,15 +129,14 @@ export const createRelation = async (createrId: string, partnerId: string, newRe
 }
 
 
-export const createUserRelationUpdateObject = (user1Id: string, user2Id: string, relationId: string) => {
-    const user1RelaitonsRef = db.ref(`/user_relations/${user1Id}/${relationId}`)
-    const user2RelaitonsRef = db.ref(`/user_relations/${user2Id}/${relationId}`)
+export const createUserRelationUpdateObject = (createrId: string, partnerId: string, relationId: string) => {
+    const user1RelaitonsRef = db.ref(`/user_relations/${createrId}/${relationId}`)
+    const user2RelaitonsRef = db.ref(`/user_relations/${partnerId}/${relationId}`)
 
-    const refArray = [user1RelaitonsRef, user2RelaitonsRef]
     const updateObj = {}
-    refArray.forEach(key => {
-        updateObj[getfullKey(key)] = true
-    })
+    updateObj[getfullKey(user1RelaitonsRef)] = 'creater'
+    updateObj[getfullKey(user2RelaitonsRef)] = 'partner'
+
     return updateObj
 
 }
@@ -152,9 +187,6 @@ export const addNewPartnerToList = async (user1Id: string, user2Id: string) => {
         updateObj[getfullKey(userRefArray[i])] = userArray[i]
     }
     return updateObj
-
-
-
 }
 
 // TODO

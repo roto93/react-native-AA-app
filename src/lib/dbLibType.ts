@@ -68,3 +68,15 @@ export interface IpartnerProps {
     email: string,
     username: string,
 }
+
+export type IRequestEntries = [string, IRelationRequest]
+
+export interface IRelationRequest {
+    at: string,
+    from: IDBUserDataProps
+}
+export interface IRequestsProps {
+    at: string,
+    username: string,
+    id: string
+}
