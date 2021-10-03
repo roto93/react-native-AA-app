@@ -80,3 +80,8 @@ export interface IRequestsProps {
     username: string,
     id: string
 }
+
+export interface IUserLookup {
+    partner_list: object,
+    relations: object,
+}

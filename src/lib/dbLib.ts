@@ -1,4 +1,4 @@
-import { IDBUserDataProps, IDBRelationProps, IpartnerProps, IRelationRequest, IRequestEntries } from './dbLibType';
+import { IDBUserDataProps, IDBRelationProps, IRelationRequest, IUserLookup } from './dbLibType';
 import { db } from "../../firebase";
 import firebase from 'firebase'
 
@@ -10,24 +10,21 @@ import firebase from 'firebase'
  */
 export const userUpdate = async (userID: string, data: IDBUserDataProps) => {
     const userRef = db.ref(`/users/${userID}`)
+    const oldUserData = (await userRef.once('value')).val()
+    const newUserData = {
+        ...oldUserData,
+        ...data
+    }
 
-    const dataEntries = Object.entries(data)
     let updateObj = {}
-    dataEntries.forEach(([key, val]) => {
-        updateObj[getfullKey(userRef) + `/${key}`] = val
-    })
+    updateObj[`/users/${userID}`] = newUserData
+
 
     // lookup
-    const userRelations = (await db.ref(`/user_relations/${userID}`).once('value')).val()
-    const userRelationsUpdateObj = {}
-    if (userRelations) {
-        const suerRelationsEntries = Object.entries(userRelations)
-        suerRelationsEntries.forEach(async ([relationKey, relationRole]) => {
-            dataEntries.forEach(([dataKey, dataVal]) => {
-                userRelationsUpdateObj[`/relations/${relationKey}/${relationRole}/${dataKey}`] = dataVal
-                // userRelationsUpdateObj[`/relations/${key}/partner/${dataKey}`] = dataVal
-            })
-        })
+    const userLookup = (await db.ref(`/user_lookup/${userID}`).once('value')).val()
+    let userRelationsUpdateObj = {}
+    if (userLookup) {
+        userRelationsUpdateObj = getUserUpdateObject(userID, userRelationsUpdateObj, userLookup, newUserData)
     }
 
     updateObj = {
@@ -38,6 +35,23 @@ export const userUpdate = async (userID: string, data: IDBUserDataProps) => {
     db.ref().update(updateObj)
 }
 
+
+export const getUserUpdateObject = (userID: string, obj: object, lookup: IUserLookup, newUserData: object) => {
+
+    // partner list
+    const partnerListEntries = Object.entries(lookup.partner_list)
+    partnerListEntries.forEach(([partnerID, _]) => {
+        obj[`/partner_list/${partnerID}/${userID}`] = newUserData
+    })
+
+    // relations
+    const relationEntries = Object.entries(lookup.relations)
+    relationEntries.forEach(([relationID, role]) => {
+        obj[`/relations/${relationID}/${role}`] = newUserData
+    })
+
+    return obj
+}
 
 export const getUserProfile = async (userID: string, type?: string): Promise<IDBUserDataProps | string> => {
     const userRef = db.ref(`/users/${userID}`)
@@ -162,36 +176,36 @@ export const createNewPartners = async (user1ID: string, user2ID: string) => {
 }
 
 
-export const addNewPartnerToList = async (user1ID: string, user2ID: string) => {
-    const user1Ref = db.ref(`/users/${user1ID}/partner_list/${user2ID}`)
-    const user2Ref = db.ref(`/users/${user2ID}/partner_list/${user1ID}`)
-    const userRefArray = [user1Ref, user2Ref]
+// export const addNewPartnerToList = async (user1ID: string, user2ID: string) => {
+//     const user1Ref = db.ref(`/users/${user1ID}/partner_list/${user2ID}`)
+//     const user2Ref = db.ref(`/users/${user2ID}/partner_list/${user1ID}`)
+//     const userRefArray = [user1Ref, user2Ref]
 
-    const [user1DataSnap, user2DataSnap] = await Promise.all([
-        db.ref(`/users/${user1ID}`).get(),
-        db.ref(`/users/${user2ID}`).get()
-    ])
-    const [user1Data, user2Data] = [user1DataSnap.val(), user2DataSnap.val()]
-    const user1 = {
-        id: user1Data.uid,
-        email: user1Data.email,
-        username: user1Data.username,
-        user_exists: true
-    }
-    const user2 = {
-        id: user2ID,
-        email: user2Data.email,
-        username: user2Data.username,
-        user_exists: true
-    }
-    const userArray = [user1, user2]
+//     const [user1DataSnap, user2DataSnap] = await Promise.all([
+//         db.ref(`/users/${user1ID}`).get(),
+//         db.ref(`/users/${user2ID}`).get()
+//     ])
+//     const [user1Data, user2Data] = [user1DataSnap.val(), user2DataSnap.val()]
+//     const user1 = {
+//         id: user1Data.uid,
+//         email: user1Data.email,
+//         username: user1Data.username,
+//         user_exists: true
+//     }
+//     const user2 = {
+//         id: user2ID,
+//         email: user2Data.email,
+//         username: user2Data.username,
+//         user_exists: true
+//     }
+//     const userArray = [user1, user2]
 
-    const updateObj = {}
-    for (let i in userRefArray) {
-        updateObj[getfullKey(userRefArray[i])] = userArray[i]
-    }
-    return updateObj
-}
+//     const updateObj = {}
+//     for (let i in userRefArray) {
+//         updateObj[getfullKey(userRefArray[i])] = userArray[i]
+//     }
+//     return updateObj
+// }
 
 // TODO
 // export const addNewRelationToList = async (user1ID: string, user2ID: string, relationID: string) => {
